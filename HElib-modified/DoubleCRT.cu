@@ -188,28 +188,52 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	vec_long primes;
-	primes.SetLength(s.card());
-	for(long i = s.first(); i <= s.last(); i = s.next(i)) {
-		primes[i] = context.ithPrime(i);
-	}
-
-	vec_long A;
-	vec_long B;
-	A.SetLength(s.card() * phim);
-	B.SetLength(s.card() * phim);
-
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
-		memcpy(&(B._vec__rep.rep[j*phim]), (*other_map)[i]._vec__rep.rep, sizeof(long) * phim);
-	}
-
 	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+
+		//vec_long temp;
+		//temp.SetLength(s.card() * phim);
+
+		//for (long i = s.first(), k = 0; i <= s.last(); i = s.next(i), k++) {
+		//	long pi = context.ithPrime(i);
+		//	vec_long& row = map[i];
+		//	const vec_long& other_row = (*other_map)[i];
+
+		//	for (long j = 0; j < phim; j++)
+		//		temp[(k*phim) + j] = fun.apply(row[j], other_row[j], pi);
+		//}
+		
+		vec_long primes;
+		primes.SetLength(s.card());
+		for(long i = s.first(), k=0; i <= s.last(); i = s.next(i), k++) {
+			primes[k] = context.ithPrime(i);
+		}
+
+		vec_long A;
+		vec_long B;
+		A.SetLength(s.card() * phim);
+		B.SetLength(s.card() * phim);
+
+		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+			memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
+			memcpy(&(B._vec__rep.rep[j*phim]), (*other_map)[i]._vec__rep.rep, sizeof(long) * phim);
+		}
+		
 		long threads_per_block = 256;
 		long num_elements = s.card() * phim;
 		long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
 
 		GPU_addMod_vectors(A, B, primes, threads_per_block, blocks_per_grid, num_elements, s, map);
+
+		//for(long i = s.first(), k = 0; i <= s.last(); i = s.next(i), k++) {
+		//	long pi = context.ithPrime(i);
+		//	for(long j = 0; j < phim; j++) {
+		//		if(map[i][j] != temp[(k * phim) + j]) {
+		//			cout << "error at: " << i << " " << j << " " << k << endl;
+		//			cout << map[i][j] << " " << temp[(k * phim) + j] << " " << pi << endl;
+		//			exit(1);
+		//		}			
+		//	}
+		//}
 	} else {
 		// add/sub/mul the data, element by element, modulo the respective primes
 		for (long i = s.first(); i <= s.last(); i = s.next(i)) {
@@ -246,23 +270,23 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	vec_long primes;
-	vec_long ns;
-	primes.SetLength(s.card());
-	ns.SetLength(s.card());
-	for(long i = s.first(); i <= s.last(); i = s.next(i)) {
-		primes[i] = context.ithPrime(i);
-		ns[i] = rem(num, primes[i]);
-	}
-
-	vec_long A;
-	A.SetLength(s.card() * phim);
-
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
-	}
-
 	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		vec_long primes;
+		vec_long ns;
+		primes.SetLength(s.card());
+		ns.SetLength(s.card());
+		for(long i = s.first(), k=0; i <= s.last(); i = s.next(i), k++) {
+			primes[k] = context.ithPrime(i);
+			ns[k] = rem(num, primes[k]);
+		}
+
+		vec_long A;
+		A.SetLength(s.card() * phim);
+
+		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+			memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
+		}
+
 		long threads_per_block = 256;
 		long num_elements = s.card() * phim;
 		long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
