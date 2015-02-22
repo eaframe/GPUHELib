@@ -30,7 +30,6 @@
 #ifndef _DoubleCRT_H_
 #define _DoubleCRT_H_
 
-
 /**
 * @class DoubleCRTHelper
 * @brief A helper class to enforce consistency within an DoubleCRTHelper object
@@ -97,7 +96,7 @@ class DoubleCRT {
 
   class AddFun {
   public:
-    long apply(long a, long b, long n) { return AddMod(a, b, n); }
+    long apply(long a, long b, long n) { return (a + b) % n; }// return AddMod(a, b, n); }
   };
 
   class SubFun {

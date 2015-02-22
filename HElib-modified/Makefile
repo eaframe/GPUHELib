@@ -14,8 +14,10 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 # 
 CC = g++
+NVCC = nvcc
 #
 CFLAGS = -g -O2 -Wfatal-errors -Wshadow -Wall -I/usr/local/include 
+CUDA_FLAGS = -I/usr/local/cuda/include -L/usr/local/cuda/lib -lcutil -lcudpp -lcuda -lcudart
 
 # useful flags:
 #   -std=c++11
@@ -44,10 +46,11 @@ AR = ar
 ARFLAGS=ruv
 GMP=-lgmp 
 LDLIBS = -L/usr/local/lib -lntl $(GMP) -lm
+GPU_LIBS = -L/usr/local/cuda/lib -lcuda -L/usr/local/cuda/lib64 -lcudart
 
 HEADER = EncryptedArray.h FHE.h Ctxt.h CModulus.h FHEContext.h PAlgebra.h DoubleCRT.h NumbTh.h bluestein.h IndexSet.h timing.h IndexMap.h replicate.h hypercube.h matching.h powerful.h permutations.h polyEval.h
 
-SRC = KeySwitching.cpp EncryptedArray.cpp FHE.cpp Ctxt.cpp CModulus.cpp FHEContext.cpp PAlgebra.cpp DoubleCRT.cpp NumbTh.cpp bluestein.cpp IndexSet.cpp timing.cpp replicate.cpp hypercube.cpp matching.cpp powerful.cpp BenesNetwork.cpp permutations.cpp PermNetwork.cpp OptimizePermutations.cpp eqtesting.cpp polyEval.cpp extractDigits.cpp EvalMap.cpp OldEvalMap.cpp recryption.cpp debugging.cpp
+SRC = KeySwitching.cpp EncryptedArray.cpp FHE.cpp Ctxt.cpp CModulus.cpp FHEContext.cpp PAlgebra.cpp DoubleCRT.cu NumbTh.cpp bluestein.cpp IndexSet.cpp timing.cpp replicate.cpp hypercube.cpp matching.cpp powerful.cpp BenesNetwork.cpp permutations.cpp PermNetwork.cpp OptimizePermutations.cpp eqtesting.cpp polyEval.cpp extractDigits.cpp EvalMap.cpp OldEvalMap.cpp recryption.cpp debugging.cpp
 
 OBJ = NumbTh.o timing.o bluestein.o PAlgebra.o  CModulus.o FHEContext.o IndexSet.o DoubleCRT.o FHE.o KeySwitching.o Ctxt.o EncryptedArray.o replicate.o hypercube.o matching.o powerful.o BenesNetwork.o permutations.o PermNetwork.o OptimizePermutations.o eqtesting.o polyEval.o extractDigits.o EvalMap.o OldEvalMap.o recryption.o debugging.o
 
@@ -76,8 +79,8 @@ test: $(TESTPROGS)
 
 obj: $(OBJ)
 
-DoubleCRT.o: DoubleCRT.cpp AltCRT.cpp $(HEADER)
-	$(CC) $(CFLAGS) -c DoubleCRT.cpp
+DoubleCRT.o: DoubleCRT.cu AltCRT.cpp $(HEADER)
+	$(NVCC) $(CUDA_FLAGS) -c DoubleCRT.cu
 
 %.o: %.cpp $(HEADER)
 	$(CC) $(CFLAGS) -c $<
@@ -86,7 +89,7 @@ fhe.a: $(OBJ)
 	$(AR) $(ARFLAGS) fhe.a $(OBJ)
 
 ./%_x: %.cpp fhe.a
-	$(CC) $(CFLAGS) -o $@ $< fhe.a $(LDLIBS)
+	$(CC) $(CFLAGS) -o $@ $< fhe.a $(LDLIBS) $(GPU_LIBS)
 
 clean:
 	rm -f *.o *_x *_x.exe *.a core.*

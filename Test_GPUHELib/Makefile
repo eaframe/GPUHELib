@@ -9,7 +9,7 @@ MASTER_LIBS = 		-L/usr/local/lib/ -lntl -lgmp
 #modified
 MODIFIED_FHE_LIB = 	/home/ethan/Thesis/GPUHELib/HElib-modified/fhe.a
 MODIFIED_SRC = 		/home/ethan/Thesis/GPUHELib/HElib-modified
-MODIFIED_LIBS = 	-L/usr/local/lib/ -lntl -lgmp
+MODIFIED_LIBS = 	-L/usr/local/lib/ -lntl -lgmp -L/usr/local/cuda/lib -lcuda -L/usr/local/cuda/lib64 -lcudart
 
 all:
 	make master
