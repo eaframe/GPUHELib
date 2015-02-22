@@ -34,14 +34,16 @@
 #else
 #warning "Polynomial Arithmetic Implementation in DoubleCRT.cpp"
 
-__global__ void vectorAddMod(long *vector_A, long *vector_B, long width, long modulus) {
+__device__ long *vector_moduli;
 
+__global__ void vectorAddMod(long *vector_A, long *vector_B, long width, long sub_width) {
 	long tid;
 
 	tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < width) {
 		long sum = vector_A[tid] + vector_B[tid];
+		long modulus = vector_moduli[tid / sub_width];
 		vector_A[tid] = sum - modulus * (sum / modulus);
 
 		tid += blockDim.x * gridDim.x;
@@ -50,52 +52,73 @@ __global__ void vectorAddMod(long *vector_A, long *vector_B, long width, long mo
 	return;
 }
 
-__global__ void vectorAddMod(long *vector_A, long num, long width, long modulus) {
+void GPU_addMod_vectors(vec_long vector1, vec_long vector2, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map) {
+	long *vector_A = NULL;
+	long *vector_B = NULL;
+	long *vector_C = NULL;
+
+	cudaMalloc((void **)&vector_A, width * sizeof(long));
+	cudaMalloc((void **)&vector_B, width * sizeof(long));
+	cudaMalloc((void **)&vector_C, s.card() * sizeof(long));
+
+	cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
+	cudaMemcpy(vector_B, vector2.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
+	cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *));
+
+	vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
+
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		cudaMemcpy(map[i]._vec__rep.rep, &(vector_A[j*(width / s.card())]), (width / s.card()) * sizeof(long), cudaMemcpyDeviceToHost);
+	}
+
+	cudaFree(vector_A);
+	cudaFree(vector_B);
+	cudaFree(vector_C);
+}
+
+__device__ long *vector_ns;
+
+__global__ void vectorAddMod(long *vector_A, long width, long sub_width) {
 	long tid;
 
 	tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < width) {
-		long sum = vector_A[tid] + num;
+		long sum = vector_A[tid] + vector_ns[tid / sub_width];
+		long modulus = vector_moduli[tid / sub_width];
 		vector_A[tid] = sum - modulus * (sum / modulus);
 
 		tid += blockDim.x * gridDim.x;
 	}
 
 	return;
-
 }
 
-void GPU_addMod(vec_long& vector1, const vec_long& vector2, int threads_per_block, int blocks_per_grid, long width, long modulus) {
+void GPU_addMod_vectorAndNums(vec_long& vector1, vec_long ns, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map) {
 	long *vector_A = NULL;
 	long *vector_B = NULL;
+	long *vector_C = NULL;
 
 	cudaMalloc((void **)&vector_A, width * sizeof(long));
-	cudaMalloc((void **)&vector_B, width * sizeof(long));
+	cudaMalloc((void **)&vector_B, s.card() * sizeof(long));
+	cudaMalloc((void **)&vector_B, s.card() * sizeof(long));
 
 	cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpy(vector_B, vector2.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
+	cudaMemcpy(vector_B, ns.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice);
+	cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(vector_ns, &vector_B, sizeof(long *));
+	cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *));
 
-	vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, modulus);
+	vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
 
-	cudaMemcpy(vector1._vec__rep.rep, vector_A, width *sizeof(long), cudaMemcpyDeviceToHost);
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		cudaMemcpy(map[i]._vec__rep.rep, &(vector_A[j*(width / s.card())]), (width / s.card()) * sizeof(long), cudaMemcpyDeviceToHost);
+	}
 
 	cudaFree(vector_A);
 	cudaFree(vector_B);
-}
-
-void GPU_addMod(vec_long& vector1, long num, int threads_per_block, int blocks_per_grid, long width, long modulus) {
-	long *vector_A = NULL;
-
-	cudaMalloc((void **)&vector_A, width * sizeof(long));
-
-	cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
-
-	vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, num, width, modulus);
-
-	cudaMemcpy(vector1._vec__rep.rep, vector_A, width *sizeof(long), cudaMemcpyDeviceToHost);
-
-	cudaFree(vector_A);
+	cudaFree(vector_C);
 }
 
 // NTL implementation of mat_long
@@ -165,22 +188,41 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-  // add/sub/mul the data, element by element, modulo the respective primes
-  for (long i = s.first(); i <= s.last(); i = s.next(i)) {
-    long pi = context.ithPrime(i);
-    vec_long& row = map[i];
-    const vec_long& other_row = (*other_map)[i];
+	vec_long primes;
+	primes.SetLength(s.card());
+	for(long i = s.first(); i <= s.last(); i = s.next(i)) {
+		primes[i] = context.ithPrime(i);
+	}
+
+	vec_long A;
+	vec_long B;
+	A.SetLength(s.card() * phim);
+	B.SetLength(s.card() * phim);
+
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
+		memcpy(&(B._vec__rep.rep[j*phim]), (*other_map)[i]._vec__rep.rep, sizeof(long) * phim);
+	}
 
 	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		//cout << "Adding vector on GPU" << endl;
-		int threads_per_block = 256;
-		int blocks_per_grid = (phim + threads_per_block - 1) / threads_per_block;
-		GPU_addMod(row, other_row, threads_per_block, blocks_per_grid, phim, pi);
+		long threads_per_block = 256;
+		long num_elements = s.card() * phim;
+		long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
+
+		GPU_addMod_vectors(A, B, primes, threads_per_block, blocks_per_grid, num_elements, s, map);
 	} else {
-		for (long j = 0; j < phim; j++)
-      		row[j] = fun.apply(row[j], other_row[j], pi);
+		// add/sub/mul the data, element by element, modulo the respective primes
+		for (long i = s.first(); i <= s.last(); i = s.next(i)) {
+			long pi = context.ithPrime(i);
+			vec_long& row = map[i];
+			const vec_long& other_row = (*other_map)[i];
+
+			for (long j = 0; j < phim; j++)
+				row[j] = fun.apply(row[j], other_row[j], pi);
+		}
 	}
-  }
+
+  
   return *this;
 }
 
@@ -203,24 +245,40 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
-  
-  for (long i = s.first(); i <= s.last(); i = s.next(i)) {
-    long pi = context.ithPrime(i);
-    long n = rem(num, pi);  // n = num % pi
-    vec_long& row = map[i];
-	
+
+	vec_long primes;
+	vec_long ns;
+	primes.SetLength(s.card());
+	ns.SetLength(s.card());
+	for(long i = s.first(); i <= s.last(); i = s.next(i)) {
+		primes[i] = context.ithPrime(i);
+		ns[i] = rem(num, primes[i]);
+	}
+
+	vec_long A;
+	A.SetLength(s.card() * phim);
+
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
+	}
+
 	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		//cout << "Adding num on GPU" << endl;
-		int threads_per_block = 256;
-		int blocks_per_grid = (phim + threads_per_block - 1) / threads_per_block;
-		GPU_addMod(row, n, threads_per_block, blocks_per_grid, phim, pi);
+		long threads_per_block = 256;
+		long num_elements = s.card() * phim;
+		long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
+
+		GPU_addMod_vectorAndNums(A, ns, primes, threads_per_block, blocks_per_grid, num_elements, s, map);
+	} else {
+		for (long i = s.first(); i <= s.last(); i = s.next(i)) {
+    			long pi = context.ithPrime(i);
+    			long n = rem(num, pi);  // n = num % pi
+    			vec_long& row = map[i];
+
+			for (long j = 0; j < phim; j++)
+				row[j] = fun.apply(row[j], n, pi);
+		}
 	}
-	else {
-		for (long j = 0; j < phim; j++)
-			row[j] = fun.apply(row[j], n, pi);
-	}
-    
-  }
+
   return *this;
 }
 
