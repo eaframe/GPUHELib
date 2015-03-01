@@ -37,16 +37,21 @@
 
 __device__ long *vector_moduli;
 
+/* 
+	long is 64 bit signed int, thus 2^63-1 is largest value
+	largest moduli is 2^63-1, thus largest vector values are 2^63-2
+	(2^63-2)+(2^63-2) = 2^64-4 < 2^64-1, thus the need for unsigned 64 bit int
+*/
 __global__ void vectorAddMod(long *vector_A, long *vector_B, long width, long sub_width) {
 	long tid;
 
 	tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < width) {
-		long modulus = vector_moduli[tid / sub_width];
-		long sum = vector_A[tid] + vector_B[tid];
+		uint64_t modulus = (uint64_t)vector_moduli[tid / sub_width];
+		uint64_t sum = (uint64_t)vector_A[tid] + (uint64_t)vector_B[tid];
 		
-		vector_A[tid] = sum - modulus * (sum / modulus);
+		vector_A[tid] = (long)(sum - modulus * (sum / modulus));
 
 		tid += blockDim.x * gridDim.x;
 	}
@@ -54,17 +59,22 @@ __global__ void vectorAddMod(long *vector_A, long *vector_B, long width, long su
 	return;
 }
 
+/*
+	long is 64 bit signed int, thus 2^63-1 is largest value
+	largest moduli is 2^63-1, thus largest vector values are 2^63-2
+	(2^63-2) - 0 + (2^63-1) = 2^64-3 < 2^64-1, thus the need for unsigned 64 bit int
+*/
 __global__ void vectorSubMod(long *vector_A, long *vector_B, long width, long sub_width) {
 	long tid;
 
 	tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < width) {
-		long modulus = vector_moduli[tid / sub_width];
+		uint64_t modulus = (uint64_t)vector_moduli[tid / sub_width];
 		// add modulus to ensure result is > 0, will be removed when mod by modulus
-		long diff = vector_A[tid] - vector_B[tid] + modulus;
+		uint64_t diff = (uint64_t)vector_A[tid] + modulus - (uint64_t)vector_B[tid];
 		
-		vector_A[tid] = diff - modulus * (diff / modulus);
+		vector_A[tid] = (long)(diff - modulus * (diff / modulus));
 
 		tid += blockDim.x * gridDim.x;
 	}
@@ -72,6 +82,14 @@ __global__ void vectorSubMod(long *vector_A, long *vector_B, long width, long su
 	return;
 }
 
+/*
+	long is 64 bit signed int, thus 2^63-1 is largest value
+	largest moduli is 2^63-1, thus largest vector values are 2^63-2
+	(2^63 - 2)(2^63 - 2) = 2^126 - 2^65 + 4, which will not fit in any data type
+	thus need to split the original values into 32 bit pieces, then perform
+	operation, and piece back together
+	This is done using Karatsuba's algorith with B = 2 and m = 32
+*/
 __global__ void vectorMultMod(long *vector_A, long *vector_B, long width, long sub_width) {
 	long tid;
 
@@ -80,13 +98,14 @@ __global__ void vectorMultMod(long *vector_A, long *vector_B, long width, long s
 	while (tid < width) {
 		uint64_t modulus = (uint64_t)vector_moduli[tid / sub_width];
 
-		// these were flipped, flip back to work with loops below
 		uint64_t a1 = (uint64_t)vector_A[tid] / 4294967296;
 		uint64_t a2 = (uint64_t)vector_A[tid] - 4294967296 * a1;
 		uint64_t b1 = (uint64_t)vector_B[tid] / 4294967296;
 		uint64_t b2 = (uint64_t)vector_B[tid] - 4294967296 * b1;
 	
-		uint64_t two_16_mod = 65536 - modulus * (65536 / modulus);
+		// this will only work for modulus < 2^48, otherwise
+		// must use loops below
+//		uint64_t two_16_mod = 65536 - modulus * (65536 / modulus);
 
 		uint64_t z0 = a2 * b2;
 		z0 = z0 - modulus * (z0 / modulus);
@@ -97,53 +116,43 @@ __global__ void vectorMultMod(long *vector_A, long *vector_B, long width, long s
 		uint64_t p21 = a2 * b1;
 		p21 = p21 - modulus * (p21 / modulus);
 
-		uint64_t z1 = p12 + p21;
-		z1 = z1 - modulus * (z1 / modulus);
-		z1 = z1 * two_16_mod;
-		z1 = z1 - modulus * (z1 / modulus);
-		z1 = z1 * two_16_mod;
-		z1 = z1 - modulus * (z1 / modulus);
+//		uint64_t z1 = p12 + p21;
+//		z1 = z1 - modulus * (z1 / modulus);
+//		z1 = z1 * two_16_mod;
+//		z1 = z1 - modulus * (z1 / modulus);
+//		z1 = z1 * two_16_mod;
+//		z1 = z1 - modulus * (z1 / modulus);
 
+//		uint64_t z2 = a1 * b1;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+
+		uint64_t z1 = p12 + p21;
 		uint64_t z2 = a1 * b1;
-		z2 = z2 - modulus * (z2 / modulus);
-		z2 = z2 * two_16_mod;
-		z2 = z2 - modulus * (z2 / modulus);
-		z2 = z2 * two_16_mod;
-		z2 = z2 - modulus * (z2 / modulus);
-		z2 = z2 * two_16_mod;
-		z2 = z2 - modulus * (z2 / modulus);
-		z2 = z2 * two_16_mod;
-		z2 = z2 - modulus * (z2 / modulus);
+
+		int i;
+		for(i=0; i<32; i++) {
+			z1 = z1 * 2;
+			z1 = z1 - modulus * (z1 / modulus);	
+
+			z2 = z2 * 2;
+			z2 = z2 - modulus * (z2 / modulus);
+		}
+
+		for(i=i; i<64; i++) {
+			z2 = z2 * 2;
+			z2 = z2 - modulus * (z2 / modulus);
+		}
 
 		uint64_t z = z0 + z1 + z2;
 		vector_A[tid] = (long)(z - modulus * (z / modulus));
-
-		// above works for tests so far, need to do eval to make sure will always work
-		// otherwise below loops should always work, i think
-//		int i;
-//		for(i=0; i<32; i++) {
-//			p12 = p12 * 2;
-//			p12 = p12 - modulus * (p12 / modulus);	
-
-//			p21 = p21 * 2;
-//			p21 = p21 - modulus * (p21 / modulus);
-
-//			p22 = p22 * 2;
-//			p22 = p22 - modulus * (p22 / modulus);
-//		}
-
-//		for(i=i; i<64; i++) {
-//			p22 = p22 * 2;
-//			p22 = p22 - modulus * (p22 / modulus);
-//		}
-
-//		uint64_t mult = p11 + p12;
-//		mult = mult - modulus * (mult / modulus);
-//		mult = mult + p21;
-//		mult = mult - modulus * (mult / modulus);
-//		mult = mult + p22;
-		
-//		vector_A[tid] = (long)(mult - modulus * (mult / modulus));
 
 		tid += blockDim.x * gridDim.x;
 	}
@@ -157,30 +166,41 @@ enum OpType {
 	Op_MulFun
 };
 
+void GPU_error(const char *file, const int line, cudaError err) {
+	cout << cudaGetErrorString(err) << " in file: " << file << " at line: " << line << endl;
+	exit(1);
+}
+
 void GPU_operateOn_vectors(vec_long vector1, vec_long vector2, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map, enum OpType opType) {
 	long *vector_A = NULL;
 	long *vector_B = NULL;
 	long *vector_C = NULL;
 
-	cudaMalloc((void **)&vector_A, width * sizeof(long));
-	cudaMalloc((void **)&vector_B, width * sizeof(long));
-	cudaMalloc((void **)&vector_C, s.card() * sizeof(long));
+	if(cudaSuccess != cudaMalloc((void **)&vector_A, width * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_B, width * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 
-	cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpy(vector_B, vector2.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *));
+	if(cudaSuccess != cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpy(vector_B, vector2.elts(), width * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 
 	if(opType == Op_AddFun) {
 		vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	} else if (opType == Op_SubFun) {
 		vectorSubMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	} else if (opType == Op_MulFun) {
 		vectorMultMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
 
 	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		cudaMemcpy(map[i]._vec__rep.rep, &(vector_A[j*(width / s.card())]), (width / s.card()) * sizeof(long), cudaMemcpyDeviceToHost);
+		if(cudaSuccess != cudaMemcpy(map[i]._vec__rep.rep, 
+								&(vector_A[j*(width / s.card())]), 
+								(width / s.card()) * sizeof(long), 
+								cudaMemcpyDeviceToHost)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
 
 	cudaFree(vector_A);
@@ -190,15 +210,20 @@ void GPU_operateOn_vectors(vec_long vector1, vec_long vector2, vec_long moduli, 
 
 __device__ long *vector_ns;
 
+/* 
+	long is 64 bit signed int, thus 2^63-1 is largest value
+	largest moduli is 2^63-1, thus largest vector values are 2^63-2
+	(2^63-2)+(2^63-2) = 2^64-4 < 2^64-1, thus the need for unsigned 64 bit int
+*/
 __global__ void vectorAddMod(long *vector_A, long width, long sub_width) {
 	long tid;
 
 	tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < width) {
-		long sum = vector_A[tid] + vector_ns[tid / sub_width];
-		long modulus = vector_moduli[tid / sub_width];
-		vector_A[tid] = sum - modulus * (sum / modulus);
+		uint64_t modulus = (uint64_t)vector_moduli[tid / sub_width];
+		uint64_t sum = (uint64_t)vector_A[tid] + (uint64_t)vector_ns[tid / sub_width];
+		vector_A[tid] = (long)(sum - modulus * (sum / modulus));
 
 		tid += blockDim.x * gridDim.x;
 	}
@@ -206,25 +231,138 @@ __global__ void vectorAddMod(long *vector_A, long width, long sub_width) {
 	return;
 }
 
-void GPU_addMod_vectorAndNums(vec_long& vector1, vec_long ns, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map) {
+/*
+	long is 64 bit signed int, thus 2^63-1 is largest value
+	largest moduli is 2^63-1, thus largest vector values are 2^63-2
+	(2^63-2) - 0 + (2^63-1) = 2^64-3 < 2^64-1, thus the need for unsigned 64 bit int
+*/
+__global__ void vectorSubMod(long *vector_A, long width, long sub_width) {
+	long tid;
+
+	tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+	while (tid < width) {
+		uint64_t modulus = (uint64_t)vector_moduli[tid / sub_width];
+		// add modulus to ensure result is > 0, will be removed when mod by modulus
+		uint64_t diff = (uint64_t)vector_A[tid] + modulus - (uint64_t)vector_ns[tid / sub_width];
+		
+		vector_A[tid] = (long)(diff - modulus * (diff / modulus));
+
+		tid += blockDim.x * gridDim.x;
+	}
+
+	return;
+}
+
+/*
+	long is 64 bit signed int, thus 2^63-1 is largest value
+	largest moduli is 2^63-1, thus largest vector values are 2^63-2
+	(2^63 - 2)(2^63 - 2) = 2^126 - 2^65 + 4, which will not fit in any data type
+	thus need to split the original values into 32 bit pieces, then perform
+	operation, and piece back together
+	This is done using Karatsuba's algorith with B = 2 and m = 32
+*/
+__global__ void vectorMultMod(long *vector_A, long width, long sub_width) {
+	long tid;
+
+	tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+	while (tid < width) {
+		uint64_t modulus = (uint64_t)vector_moduli[tid / sub_width];
+
+		uint64_t a1 = (uint64_t)vector_A[tid] / 4294967296;
+		uint64_t a2 = (uint64_t)vector_A[tid] - 4294967296 * a1;
+		uint64_t b1 = (uint64_t)vector_ns[tid / sub_width] / 4294967296;
+		uint64_t b2 = (uint64_t)vector_ns[tid / sub_width] - 4294967296 * b1;
+	
+		// this will only work for modulus < 2^48, otherwise
+		// must use loops below
+//		uint64_t two_16_mod = 65536 - modulus * (65536 / modulus);
+
+		uint64_t z0 = a2 * b2;
+		z0 = z0 - modulus * (z0 / modulus);
+
+		uint64_t p12 = a1 * b2;
+		p12 = p12 - modulus * (p12 / modulus);
+
+		uint64_t p21 = a2 * b1;
+		p21 = p21 - modulus * (p21 / modulus);
+
+//		uint64_t z1 = p12 + p21;
+//		z1 = z1 - modulus * (z1 / modulus);
+//		z1 = z1 * two_16_mod;
+//		z1 = z1 - modulus * (z1 / modulus);
+//		z1 = z1 * two_16_mod;
+//		z1 = z1 - modulus * (z1 / modulus);
+
+//		uint64_t z2 = a1 * b1;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+//		z2 = z2 * two_16_mod;
+//		z2 = z2 - modulus * (z2 / modulus);
+
+		uint64_t z1 = p12 + p21;
+		uint64_t z2 = a1 * b1;
+
+		int i;
+		for(i=0; i<32; i++) {
+			z1 = z1 * 2;
+			z1 = z1 - modulus * (z1 / modulus);	
+
+			z2 = z2 * 2;
+			z2 = z2 - modulus * (z2 / modulus);
+		}
+
+		for(i=i; i<64; i++) {
+			z2 = z2 * 2;
+			z2 = z2 - modulus * (z2 / modulus);
+		}
+
+		uint64_t z = z0 + z1 + z2;
+		vector_A[tid] = (long)(z - modulus * (z / modulus));
+
+		tid += blockDim.x * gridDim.x;
+	}
+
+	return;
+}
+
+void GPU_operateOn_vectorAndNums(vec_long& vector1, vec_long ns, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map, enum OpType opType) {
 	long *vector_A = NULL;
 	long *vector_B = NULL;
 	long *vector_C = NULL;
 
-	cudaMalloc((void **)&vector_A, width * sizeof(long));
-	cudaMalloc((void **)&vector_B, s.card() * sizeof(long));
-	cudaMalloc((void **)&vector_B, s.card() * sizeof(long));
+	if(cudaSuccess != cudaMalloc((void **)&vector_A, width * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_B, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 
-	cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpy(vector_B, ns.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(vector_ns, &vector_B, sizeof(long *));
-	cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *));
+	if(cudaSuccess != cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpy(vector_B, ns.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpyToSymbol(vector_ns, &vector_B, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 
-	vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
+	if(opType == Op_AddFun) {
+		vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	} else if (opType == Op_SubFun) {
+		vectorSubMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	} else if (opType == Op_MulFun) {
+		vectorMultMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	}
 
 	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		cudaMemcpy(map[i]._vec__rep.rep, &(vector_A[j*(width / s.card())]), (width / s.card()) * sizeof(long), cudaMemcpyDeviceToHost);
+		if(cudaSuccess != cudaMemcpy(map[i]._vec__rep.rep, 
+								&(vector_A[j*(width / s.card())]), 
+								(width / s.card()) * sizeof(long), 
+								cudaMemcpyDeviceToHost)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
 
 	cudaFree(vector_A);
@@ -317,48 +455,16 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 	long num_elements = s.card() * phim;
 	long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
 
-//	vec_long temp;
-//	temp.SetLength(s.card()*phim);
-
 	enum OpType opType;
 	if (typeid(fun) == typeid(DoubleCRT::AddFun)) {
 		opType = Op_AddFun;
 	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
 		opType = Op_SubFun;
-	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-
-//		for (long i = s.first(), k=0; i <= s.last(); i = s.next(i), k++) {
-//			long pi = context.ithPrime(i);
-//			vec_long& row = map[i];
-//			const vec_long& other_row = (*other_map)[i];
-
-//			for (long j = 0; j < phim; j++) {
-//				temp[(k*phim) + j] = fun.apply(row[j], other_row[j], pi);
-//				if((k*phim) + j == 16632) {
-//					cout << row[j] << " " << other_row[j] << " " << pi << endl;
-//				}
-//			}
-//		}
-		
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {		
 		opType = Op_MulFun;
 	}
 
 	GPU_operateOn_vectors(A, B, primes, threads_per_block, blocks_per_grid, num_elements, s, map, opType);
-
-//	if(typeid(fun) == typeid(DoubleCRT::MulFun)) {
-//		for (long i = s.first(), k=0; i <= s.last(); i = s.next(i), k++) {
-//			long pi = context.ithPrime(i);
-//			vec_long& row = map[i];
-
-//			for (long j = 0; j < phim; j++) {
-//				if(temp[(k*phim) + j] != row[j]) {
-//					cout << (k*phim) + j << endl;
-//					cout << temp[(k*phim) + j] << " " << row[j] << " " << pi << endl;
-//					exit(1);
-//				}
-//			}
-//		}
-//	}
   
   return *this;
 }
@@ -383,38 +489,35 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		vec_long primes;
-		vec_long ns;
-		primes.SetLength(s.card());
-		ns.SetLength(s.card());
-		for(long i = s.first(), k=0; i <= s.last(); i = s.next(i), k++) {
-			primes[k] = context.ithPrime(i);
-			ns[k] = rem(num, primes[k]);
-		}
+	vec_long primes;
+	primes.SetLength(s.card());
 
-		vec_long A;
-		A.SetLength(s.card() * phim);
+	vec_long ns;		
+	ns.SetLength(s.card());
 
-		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-			memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
-		}
-
-		long threads_per_block = 256;
-		long num_elements = s.card() * phim;
-		long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
-
-		GPU_addMod_vectorAndNums(A, ns, primes, threads_per_block, blocks_per_grid, num_elements, s, map);
-	} else {
-		for (long i = s.first(); i <= s.last(); i = s.next(i)) {
-    			long pi = context.ithPrime(i);
-    			long n = rem(num, pi);  // n = num % pi
-    			vec_long& row = map[i];
-
-			for (long j = 0; j < phim; j++)
-				row[j] = fun.apply(row[j], n, pi);
-		}
+	vec_long A;
+	A.SetLength(s.card() * phim);
+	
+	for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
+		primes[j] = context.ithPrime(i);
+		ns[j] = rem(num, primes[j]);
+		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
 	}
+
+	long threads_per_block = 256;
+	long num_elements = s.card() * phim;
+	long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
+
+	enum OpType opType;
+	if (typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		opType = Op_AddFun;
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		opType = Op_SubFun;
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {	
+		opType = Op_MulFun;
+	}
+
+	GPU_operateOn_vectorAndNums(A, ns, primes, threads_per_block, blocks_per_grid, num_elements, s, map, opType);
 
   return *this;
 }
