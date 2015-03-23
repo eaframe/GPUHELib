@@ -565,8 +565,6 @@ long FHESecKey::ImportSecKey(const DoubleCRT& sKey, long Hwt,
 void FHESecKey::GenKeySWmatrix(long fromSPower, long fromXPower,
 			       long fromIdx, long toIdx, long p)
 {
-  FHE_TIMER_START;
-
   // sanity checks
   if (fromSPower<=0 || fromXPower<=0) return;  
   if (fromSPower==1 && fromXPower==1 && fromIdx==toIdx) return;

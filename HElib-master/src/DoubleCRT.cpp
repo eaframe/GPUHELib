@@ -99,6 +99,7 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
+	FHE_TIMER_START;
   // add/sub/mul the data, element by element, modulo the respective primes
   for (long i = s.first(); i <= s.last(); i = s.next(i)) {
     long pi = context.ithPrime(i);
@@ -108,6 +109,8 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
     for (long j = 0; j < phim; j++)
       row[j] = fun.apply(row[j], other_row[j], pi);
   }
+
+	FHE_TIMER_STOP;
   return *this;
 }
 
@@ -131,6 +134,7 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
   
+	FHE_TIMER_START;
   for (long i = s.first(); i <= s.last(); i = s.next(i)) {
     long pi = context.ithPrime(i);
     long n = rem(num, pi);  // n = num % pi
@@ -138,6 +142,7 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
     for (long j = 0; j < phim; j++)
       row[j] = fun.apply(row[j], n, pi);
   }
+	FHE_TIMER_STOP;
   return *this;
 }
 
@@ -303,7 +308,6 @@ double DoubleCRT::addPrimesAndScale(const IndexSet& s1)
 DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context, const IndexSet& s)
 : context(_context), map(new DoubleCRTHelper(_context))
 {
-  FHE_TIMER_START;
   assert(s.last() < context.numPrimes());
 
   map.insert(s);
@@ -314,13 +318,11 @@ DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context, const IndexSet
     const Cmodulus &pi = context.ithModulus(i);
     pi.FFT(map[i], poly); // reduce mod pi and store FFT image
   }
-  FHE_TIMER_STOP;
 }
 
 DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context)
 : context(_context), map(new DoubleCRTHelper(_context))
 {
-  FHE_TIMER_START;
   IndexSet s = IndexSet(0, context.numPrimes()-1);
   // FIXME: maybe the default index set should be determined by context?
 
@@ -332,13 +334,11 @@ DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context)
     const Cmodulus &pi = context.ithModulus(i);
     pi.FFT(map[i], poly); // reduce mod pi and store FFT image
   }
-  FHE_TIMER_STOP;
 }
 
 DoubleCRT::DoubleCRT(const ZZX& poly)
 : context(*activeContext), map(new DoubleCRTHelper(*activeContext))
 {
-  FHE_TIMER_START;
   IndexSet s = IndexSet(0, context.numPrimes()-1);
   // FIXME: maybe the default index set should be determined by context?
 
@@ -350,7 +350,6 @@ DoubleCRT::DoubleCRT(const ZZX& poly)
     const Cmodulus &pi = context.ithModulus(i);
     pi.FFT(map[i], poly); // reduce mod pi and store FFT image
   }
-  FHE_TIMER_STOP;
 }
 
 DoubleCRT::DoubleCRT(const FHEcontext &_context, const IndexSet& s)
@@ -500,7 +499,6 @@ long DoubleCRT::getOneRow(Vec<long>& row, long idx, bool positive) const
 void DoubleCRT::toPoly(ZZX& poly, const IndexSet& s,
 		       bool positive) const
 {
-FHE_TIMER_START;
   if (dryRun) return;
 
   IndexSet s1 = map.getIndexSet() & s;
@@ -531,7 +529,6 @@ FHE_TIMER_START;
 
     // no need to normalize poly here
   }
-FHE_TIMER_STOP;
 }
 
 #if 0

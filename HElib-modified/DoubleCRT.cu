@@ -29,6 +29,8 @@
 #include <cuda_runtime_api.h>
 #include <cuda.h>
 
+const long NUM_THREADS_PER_BLOCK = 256;
+
 #if (ALT_CRT)
 #warning "Polynomial Arithmetic Implementation in AltCRT.cpp"
 #include "AltCRT.cpp"
@@ -102,10 +104,6 @@ __global__ void vectorMultMod(long *vector_A, long *vector_B, long width, long s
 		uint64_t a2 = (uint64_t)vector_A[tid] - 4294967296 * a1;
 		uint64_t b1 = (uint64_t)vector_B[tid] / 4294967296;
 		uint64_t b2 = (uint64_t)vector_B[tid] - 4294967296 * b1;
-	
-		// this will only work for modulus < 2^48, otherwise
-		// must use loops below
-//		uint64_t two_16_mod = 65536 - modulus * (65536 / modulus);
 
 		uint64_t z0 = a2 * b2;
 		z0 = z0 - modulus * (z0 / modulus);
@@ -115,24 +113,6 @@ __global__ void vectorMultMod(long *vector_A, long *vector_B, long width, long s
 
 		uint64_t p21 = a2 * b1;
 		p21 = p21 - modulus * (p21 / modulus);
-
-//		uint64_t z1 = p12 + p21;
-//		z1 = z1 - modulus * (z1 / modulus);
-//		z1 = z1 * two_16_mod;
-//		z1 = z1 - modulus * (z1 / modulus);
-//		z1 = z1 * two_16_mod;
-//		z1 = z1 - modulus * (z1 / modulus);
-
-//		uint64_t z2 = a1 * b1;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
 
 		uint64_t z1 = p12 + p21;
 		uint64_t z2 = a1 * b1;
@@ -158,54 +138,6 @@ __global__ void vectorMultMod(long *vector_A, long *vector_B, long width, long s
 	}
 
 	return;
-}
-
-enum OpType {
-	Op_AddFun,
-	Op_SubFun,
-	Op_MulFun
-};
-
-void GPU_error(const char *file, const int line, cudaError err) {
-	cout << cudaGetErrorString(err) << " in file: " << file << " at line: " << line << endl;
-	exit(1);
-}
-
-void GPU_operateOn_vectors(vec_long vector1, vec_long vector2, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map, enum OpType opType) {
-	long *vector_A = NULL;
-	long *vector_B = NULL;
-	long *vector_C = NULL;
-
-	if(cudaSuccess != cudaMalloc((void **)&vector_A, width * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_B, width * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-
-	if(cudaSuccess != cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpy(vector_B, vector2.elts(), width * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-
-	if(opType == Op_AddFun) {
-		vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
-		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	} else if (opType == Op_SubFun) {
-		vectorSubMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
-		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	} else if (opType == Op_MulFun) {
-		vectorMultMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, width, (width / s.card()));
-		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		if(cudaSuccess != cudaMemcpy(map[i]._vec__rep.rep, 
-								&(vector_A[j*(width / s.card())]), 
-								(width / s.card()) * sizeof(long), 
-								cudaMemcpyDeviceToHost)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-
-	cudaFree(vector_A);
-	cudaFree(vector_B);
-	cudaFree(vector_C);
 }
 
 __device__ long *vector_ns;
@@ -274,10 +206,6 @@ __global__ void vectorMultMod(long *vector_A, long width, long sub_width) {
 		uint64_t a2 = (uint64_t)vector_A[tid] - 4294967296 * a1;
 		uint64_t b1 = (uint64_t)vector_ns[tid / sub_width] / 4294967296;
 		uint64_t b2 = (uint64_t)vector_ns[tid / sub_width] - 4294967296 * b1;
-	
-		// this will only work for modulus < 2^48, otherwise
-		// must use loops below
-//		uint64_t two_16_mod = 65536 - modulus * (65536 / modulus);
 
 		uint64_t z0 = a2 * b2;
 		z0 = z0 - modulus * (z0 / modulus);
@@ -287,24 +215,6 @@ __global__ void vectorMultMod(long *vector_A, long width, long sub_width) {
 
 		uint64_t p21 = a2 * b1;
 		p21 = p21 - modulus * (p21 / modulus);
-
-//		uint64_t z1 = p12 + p21;
-//		z1 = z1 - modulus * (z1 / modulus);
-//		z1 = z1 * two_16_mod;
-//		z1 = z1 - modulus * (z1 / modulus);
-//		z1 = z1 * two_16_mod;
-//		z1 = z1 - modulus * (z1 / modulus);
-
-//		uint64_t z2 = a1 * b1;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
-//		z2 = z2 * two_16_mod;
-//		z2 = z2 - modulus * (z2 / modulus);
 
 		uint64_t z1 = p12 + p21;
 		uint64_t z2 = a1 * b1;
@@ -332,42 +242,9 @@ __global__ void vectorMultMod(long *vector_A, long width, long sub_width) {
 	return;
 }
 
-void GPU_operateOn_vectorAndNums(vec_long& vector1, vec_long ns, vec_long moduli, long threads_per_block, long blocks_per_grid, long width, const IndexSet& s, IndexMap<vec_long>& map, enum OpType opType) {
-	long *vector_A = NULL;
-	long *vector_B = NULL;
-	long *vector_C = NULL;
-
-	if(cudaSuccess != cudaMalloc((void **)&vector_A, width * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_B, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-
-	if(cudaSuccess != cudaMemcpy(vector_A, vector1.elts(), width * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpy(vector_B, ns.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpy(vector_C, moduli.elts(), s.card() * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpyToSymbol(vector_ns, &vector_B, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-
-	if(opType == Op_AddFun) {
-		vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
-		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	} else if (opType == Op_SubFun) {
-		vectorSubMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
-		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	} else if (opType == Op_MulFun) {
-		vectorMultMod<<<blocks_per_grid, threads_per_block>>>(vector_A, width, (width / s.card()));
-		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		if(cudaSuccess != cudaMemcpy(map[i]._vec__rep.rep, 
-								&(vector_A[j*(width / s.card())]), 
-								(width / s.card()) * sizeof(long), 
-								cudaMemcpyDeviceToHost)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-
-	cudaFree(vector_A);
-	cudaFree(vector_B);
-	cudaFree(vector_C);
+void GPU_error(const char *file, const int line, cudaError err) {
+	cout << cudaGetErrorString(err) << " in file: " << file << " at line: " << line << endl;
+	exit(1);
 }
 
 // NTL implementation of mat_long
@@ -437,34 +314,57 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	vec_long primes;
-	primes.SetLength(s.card());
+	FHE_TIMER_START;
 
-	vec_long A;
-	vec_long B;
-	A.SetLength(s.card() * phim);
-	B.SetLength(s.card() * phim);
-
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		primes[j] = context.ithPrime(i);
-		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
-		memcpy(&(B._vec__rep.rep[j*phim]), (*other_map)[i]._vec__rep.rep, sizeof(long) * phim);
-	}
-	
-	long threads_per_block = 256;
+	long threads_per_block = NUM_THREADS_PER_BLOCK;
 	long num_elements = s.card() * phim;
 	long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
 
-	enum OpType opType;
-	if (typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		opType = Op_AddFun;
+	long *vector_A = NULL;
+	long *vector_B = NULL;
+	long *vector_C = NULL;
+
+	if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_B, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		//primes[j] = context.ithPrime(i);
+		long ithPrime = context.ithPrime(i);
+		if(cudaSuccess != cudaMemcpy(&(vector_C[j]), &ithPrime, sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		//memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
+		if(cudaSuccess != cudaMemcpy(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
+			phim * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		//memcpy(&(B._vec__rep.rep[j*phim]), (*other_map)[i]._vec__rep.rep, sizeof(long) * phim);
+		if(cudaSuccess != cudaMemcpy(&(vector_B[j*phim]), (*other_map)[i]._vec__rep.rep, 
+			phim * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	}
+	
+	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+
+	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, num_elements, (num_elements / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-		opType = Op_SubFun;
-	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {		
-		opType = Op_MulFun;
+		vectorSubMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, num_elements, (num_elements / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		vectorMultMod<<<blocks_per_grid, threads_per_block>>>(vector_A, vector_B, num_elements, (num_elements / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
 
-	GPU_operateOn_vectors(A, B, primes, threads_per_block, blocks_per_grid, num_elements, s, map, opType);
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		if(cudaSuccess != cudaMemcpy(map[i]._vec__rep.rep, 
+								&(vector_A[j*(num_elements / s.card())]), 
+								(num_elements / s.card()) * sizeof(long), 
+								cudaMemcpyDeviceToHost)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	}
+
+	cudaFree(vector_A);
+	cudaFree(vector_B);
+	cudaFree(vector_C);
+
+	FHE_TIMER_STOP;
   
   return *this;
 }
@@ -489,35 +389,58 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	vec_long primes;
-	primes.SetLength(s.card());
+	FHE_TIMER_START;
 
-	vec_long ns;		
-	ns.SetLength(s.card());
-
-	vec_long A;
-	A.SetLength(s.card() * phim);
-	
-	for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
-		primes[j] = context.ithPrime(i);
-		ns[j] = rem(num, primes[j]);
-		memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
-	}
-
-	long threads_per_block = 256;
+	long threads_per_block = NUM_THREADS_PER_BLOCK;
 	long num_elements = s.card() * phim;
 	long blocks_per_grid = (num_elements + threads_per_block - 1) / threads_per_block;
 
-	enum OpType opType;
-	if (typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		opType = Op_AddFun;
-	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-		opType = Op_SubFun;
-	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {	
-		opType = Op_MulFun;
+	long *vector_A = NULL;
+	long *vector_B = NULL;
+	long *vector_C = NULL;
+
+	if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_B, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+
+	for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
+		//primes[j] = context.ithPrime(i);	
+		long ithPrime = context.ithPrime(i);
+		if(cudaSuccess != cudaMemcpy(&(vector_C[j]), &ithPrime, sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		//ns[j] = rem(num, primes[j]);
+		long ns = rem(num, ithPrime);
+		if(cudaSuccess != cudaMemcpy(&(vector_B[j]), &ns, sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		//memcpy(&(A._vec__rep.rep[j*phim]), map[i]._vec__rep.rep, sizeof(long) * phim);
+		if(cudaSuccess != cudaMemcpy(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
+			phim * sizeof(long), cudaMemcpyHostToDevice)) { GPU_error(__FILE__, __LINE__, cudaGetLastError()); }
 	}
 
-	GPU_operateOn_vectorAndNums(A, ns, primes, threads_per_block, blocks_per_grid, num_elements, s, map, opType);
+	if(cudaSuccess != cudaMemcpyToSymbol(vector_ns, &vector_B, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+
+	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		vectorAddMod<<<blocks_per_grid, threads_per_block>>>(vector_A, num_elements, (num_elements / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		vectorSubMod<<<blocks_per_grid, threads_per_block>>>(vector_A, num_elements, (num_elements / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		vectorMultMod<<<blocks_per_grid, threads_per_block>>>(vector_A, num_elements, (num_elements / s.card()));
+		if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	}
+
+	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+		if(cudaSuccess != cudaMemcpy(map[i]._vec__rep.rep, 
+								&(vector_A[j*(num_elements / s.card())]), 
+								(num_elements / s.card()) * sizeof(long), 
+								cudaMemcpyDeviceToHost)) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	}
+
+	cudaFree(vector_A);
+	cudaFree(vector_B);
+	cudaFree(vector_C);
+
+	FHE_TIMER_STOP;
 
   return *this;
 }
@@ -684,7 +607,6 @@ double DoubleCRT::addPrimesAndScale(const IndexSet& s1)
 DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context, const IndexSet& s)
 : context(_context), map(new DoubleCRTHelper(_context))
 {
-  FHE_TIMER_START;
   assert(s.last() < context.numPrimes());
 
   map.insert(s);
@@ -695,13 +617,11 @@ DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context, const IndexSet
     const Cmodulus &pi = context.ithModulus(i);
     pi.FFT(map[i], poly); // reduce mod pi and store FFT image
   }
-  FHE_TIMER_STOP;
 }
 
 DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context)
 : context(_context), map(new DoubleCRTHelper(_context))
 {
-  FHE_TIMER_START;
   IndexSet s = IndexSet(0, context.numPrimes()-1);
   // FIXME: maybe the default index set should be determined by context?
 
@@ -713,13 +633,11 @@ DoubleCRT::DoubleCRT(const ZZX& poly, const FHEcontext &_context)
     const Cmodulus &pi = context.ithModulus(i);
     pi.FFT(map[i], poly); // reduce mod pi and store FFT image
   }
-  FHE_TIMER_STOP;
 }
 
 DoubleCRT::DoubleCRT(const ZZX& poly)
 : context(*activeContext), map(new DoubleCRTHelper(*activeContext))
 {
-  FHE_TIMER_START;
   IndexSet s = IndexSet(0, context.numPrimes()-1);
   // FIXME: maybe the default index set should be determined by context?
 
@@ -731,7 +649,6 @@ DoubleCRT::DoubleCRT(const ZZX& poly)
     const Cmodulus &pi = context.ithModulus(i);
     pi.FFT(map[i], poly); // reduce mod pi and store FFT image
   }
-  FHE_TIMER_STOP;
 }
 
 DoubleCRT::DoubleCRT(const FHEcontext &_context, const IndexSet& s)
@@ -881,7 +798,6 @@ long DoubleCRT::getOneRow(Vec<long>& row, long idx, bool positive) const
 void DoubleCRT::toPoly(ZZX& poly, const IndexSet& s,
 		       bool positive) const
 {
-FHE_TIMER_START;
   if (dryRun) return;
 
   IndexSet s1 = map.getIndexSet() & s;
@@ -912,7 +828,6 @@ FHE_TIMER_START;
 
     // no need to normalize poly here
   }
-FHE_TIMER_STOP;
 }
 
 #if 0

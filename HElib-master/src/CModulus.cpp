@@ -155,7 +155,6 @@ Cmod<type>& Cmod<type>::operator=(const Cmod &other)
 template <class type>
 void Cmod<type>::FFT(zzv &y, const ZZX& x) const
 {
-  FHE_TIMER_START;
   zpBak bak; bak.save();
   context.restore();
   zp rt;
@@ -173,14 +172,12 @@ void Cmod<type>::FFT(zzv &y, const ZZX& x) const
   long m = getM();
   for (i=j=0; i<m; i++)
     if (zMStar->inZmStar(i)) y[j++] = rep(coeff(tmp,i));
-  FHE_TIMER_STOP;
 }
 
 
 template <class type>
 void Cmod<type>::iFFT(zpx &x, const zzv& y)const
 {
-  FHE_TIMER_START;
   zpBak bak; bak.save();
   context.restore();
   zp rt;
@@ -198,17 +195,12 @@ void Cmod<type>::iFFT(zpx &x, const zzv& y)const
   BluesteinFFT(x, m, rt, *ipowers, ipowers_aux, *iRb, iRb_aux, *Ra); // call the FFT routine
 
   // reduce the result mod (Phi_m(X),q) and copy to the output polynomial x
-FHE_NTIMER_START(iFFT_division);
   rem(x, x, *phimx); // out %= (Phi_m(X),q)
-FHE_NTIMER_STOP(iFFT_division);
 
   // normalize
   zp mm_inv;
   conv(mm_inv, m_inv);
   x *= mm_inv; 
-
-
-  FHE_TIMER_STOP;
 }
 
 // instantiating the template classes

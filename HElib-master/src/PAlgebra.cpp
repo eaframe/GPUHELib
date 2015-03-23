@@ -475,8 +475,6 @@ template<class type>
 void PAlgebraModDerived<type>::embedInSlots(RX& H, const vector<RX>& alphas, 
                                          const MappingData<type>& mappingData) const
 {
-  FHE_TIMER_START;
-
   long nSlots = zMStar.getNSlots();
   assert(lsize(alphas) == nSlots);
 
@@ -507,14 +505,11 @@ void PAlgebraModDerived<type>::embedInSlots(RX& H, const vector<RX>& alphas,
   }
 
   CRT_reconstruct(H,crt); // interpolate to get p
-
-  FHE_TIMER_STOP;
 }
 
 template<class type>
 void PAlgebraModDerived<type>::CRT_reconstruct(RX& H, vector<RX>& crt) const
 {
-  FHE_TIMER_START;
   long nslots = zMStar.getNSlots();
 
   genCrtTable();
@@ -544,7 +539,6 @@ void PAlgebraModDerived<type>::CRT_reconstruct(RX& H, vector<RX>& crt) const
 
     evalTree(H, crtTree, crt1, 0, nslots);
   }
-  FHE_TIMER_STOP;
 }
 
 template<class type>

@@ -71,11 +71,15 @@ void  TestIt(long R, long p, long r, long d, long c, long k, long w,
        << ", ords=" << ords
        << endl;
 
+	cerr << "\nconverting" << endl;
   vector<long> gens1, ords1;
   convert(gens1, gens);
   convert(ords1, ords);
 
+	cerr << "making context" << endl;
+
   FHEcontext context(m, p, r, gens1, ords1);
+	cerr << "building mod chain" << endl;
   buildModChain(context, L, c);
 
 #ifdef DEBUG_PRINTOUT
@@ -87,6 +91,7 @@ void  TestIt(long R, long p, long r, long d, long c, long k, long w,
   context.zMStar.printout();
   cerr << endl;
 
+	cerr << "Gen sec key" << endl;
   FHESecKey secretKey(context);
   const FHEPubKey& publicKey = secretKey;
   secretKey.GenSecKey(w); // A Hamming-weight-w secret key
