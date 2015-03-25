@@ -24,14 +24,14 @@ using namespace std;
 int main(int argc, char** argv) {
 
 	if(argc != 2) {
-		cout << "Usage: Test_GPUHE_* <choosen m>" << endl;
+		cout << "Usage: Test_GPUHE_* <choosen s>" << endl;
 		exit(1);
 	}
     
-    long m=0, p=257, r=1, L=16, c=3, w=64, d=0, security=128;
+    long m=0, p=65537, r=1, L=16, c=3, w=64, d=0, security=128;
     ZZX G;
     
-    m = FindM(security, L, c, p, d, 0, atoi(argv[1]), true);
+    m = FindM(security, L, c, p, d, atoi(argv[1]), 0, true);
     
 	setTimersOn();
 

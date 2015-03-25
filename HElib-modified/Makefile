@@ -76,6 +76,7 @@ check: Test_General_x Test_LinPoly_x Test_Permutations_x Test_PolyEval_x Test_Re
 	./Test_bootstrapping_x
 
 test: $(TESTPROGS)
+testGeneral: Test_General_x
 
 obj: $(OBJ)
 
