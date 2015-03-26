@@ -30,6 +30,8 @@
 #include <cuda.h>
 #include <cuda_profiler_api.h>
 
+#include "GPU.h"
+
 #if (ALT_CRT)
 #warning "Polynomial Arithmetic Implementation in AltCRT.cpp"
 #include "AltCRT.cpp"
@@ -327,48 +329,90 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 
 	FHE_TIMER_START;
 	
+//	cudaProfilerStart();
+	
 	cudaDeviceProp prop;
 	cudaGetDeviceProperties(&prop, 0);
 	long threads_per_block = prop.maxThreadsPerBlock;
 	long num_elements = s.card() * phim;
-
-	long *vector_A = NULL;
-	long *vector_B = NULL;
-	long *vector_C = NULL;
-
-	if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_B, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	
-	cudaProfilerStart();
+	if(vector_A == NULL) {
+		if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_A = num_elements;
+	} else if (length_A < num_elements) {
+		cudaFree(vector_A);
+		if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_A = num_elements;
+	}
+	
+	if(vector_B1 == NULL) {
+		if(cudaSuccess != cudaMalloc((void **)&vector_B1, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_B1 = num_elements;
+	} else if (length_B1 < num_elements) {
+		cudaFree(vector_B1);
+		if(cudaSuccess != cudaMalloc((void **)&vector_B1, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_B1 = num_elements;
+	}
 
-	cudaStream_t stream[s.card()]; 
-	for(long i = 0; i<s.card(); i++) {
-		if(cudaSuccess != cudaStreamCreate(&stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(vector_C == NULL) {
+		if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_C = s.card();
+	} else if (length_C < s.card()) {
+		cudaFree(vector_C);
+		if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_C = s.card();
+	}
+	
+	if(ithPrimes == NULL) {
+		if(cudaSuccess != cudaMallocHost((void **)&ithPrimes, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_ithPrimes = s.card();
+	} else if (length_ithPrimes < s.card()) {
+		cudaFreeHost(ithPrimes);
+		if(cudaSuccess != cudaMallocHost((void **)&ithPrimes, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_ithPrimes = s.card();
+	}
+
+	if(num_streams == 0) {
+		stream = (cudaStream_t *)malloc(s.card() * sizeof(cudaStream_t));
+		
+		for(long i = 0; i<s.card(); i++) {
+			if(cudaSuccess != cudaStreamCreate(&stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+		
+		num_streams = s.card();
+	} else if (num_streams < s.card()) {
+		stream = (cudaStream_t *)realloc(stream, s.card() * sizeof(cudaStream_t));
+		
+		for(long i = num_streams; i<s.card(); i++) {
+			if(cudaSuccess != cudaStreamCreate(&stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+		
+		num_streams = s.card();
 	}
 	
 	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		long ithPrime = context.ithPrime(i);
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &ithPrime, 
-			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		
 		if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
 			phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_B[j*phim]), (*other_map)[i]._vec__rep.rep, 
+		if(cudaSuccess != cudaMemcpyAsync(&(vector_B1[j*phim]), (*other_map)[i]._vec__rep.rep, 
 			phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			
+		ithPrimes[j] = context.ithPrime(i);
+		if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
+			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
 	
 	for(long j = 0; j<s.card(); j++) {
 		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-			vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B, phim, phim, j*phim);
+			vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-			vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B, phim, phim, j*phim);
+			vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-			vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B, phim, phim, j*phim);
+			vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
 	}
@@ -379,16 +423,8 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 								phim * sizeof(long), 
 								cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
-	
-	for(long i=0; i<s.card(); i++) {
-		if(cudaSuccess != cudaStreamDestroy(stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-	
-	cudaProfilerStop();
 
-	cudaFree(vector_A);
-	cudaFree(vector_B);
-	cudaFree(vector_C);
+//	cudaProfilerStop();
 	
 	FHE_TIMER_STOP;
   
@@ -417,39 +453,91 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 
 	FHE_TIMER_START;
 	
+//	cudaProfilerStart();
+	
 	cudaDeviceProp prop;
 	cudaGetDeviceProperties(&prop, 0);
 	long threads_per_block = prop.maxThreadsPerBlock;
 	long num_elements = s.card() * phim;
 
-	long *vector_A = NULL;
-	long *vector_B = NULL;
-	long *vector_C = NULL;
+	if(vector_A == NULL) {
+		if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_A = num_elements;
+	} else if (length_A < num_elements) {
+		cudaFree(vector_A);
+		if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_A = num_elements;
+	}
+	
+	if(vector_B2 == NULL) {
+		if(cudaSuccess != cudaMalloc((void **)&vector_B2, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		if(cudaSuccess != cudaMemcpyToSymbol(vector_ns, &vector_B2, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_B2 = s.card();
+	} else if (length_B2 < s.card()) {
+		cudaFree(vector_B2);
+		if(cudaSuccess != cudaMalloc((void **)&vector_B2, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		if(cudaSuccess != cudaMemcpyToSymbol(vector_ns, &vector_B2, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_B2 = s.card();
+	}
 
-	if(cudaSuccess != cudaMalloc((void **)&vector_A, num_elements * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_B, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpyToSymbol(vector_ns, &vector_B, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(vector_C == NULL) {
+		if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_C = s.card();
+	} else if (length_C < s.card()) {
+		cudaFree(vector_C);
+		if(cudaSuccess != cudaMalloc((void **)&vector_C, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		if(cudaSuccess != cudaMemcpyToSymbol(vector_moduli, &vector_C, sizeof(long *))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_C = s.card();
+	}
 	
-	cudaProfilerStart();
+	if(ithPrimes == NULL) {
+		if(cudaSuccess != cudaMallocHost((void **)&ithPrimes, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_ithPrimes = s.card();
+	} else if (length_ithPrimes < s.card()) {
+		cudaFreeHost(ithPrimes);
+		if(cudaSuccess != cudaMallocHost((void **)&ithPrimes, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_ithPrimes = s.card();
+	}
 	
-	cudaStream_t stream[s.card()]; 
-	for(long i = 0; i<s.card(); i++) {
-		if(cudaSuccess != cudaStreamCreate(&stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(ns == NULL) {
+		if(cudaSuccess != cudaMallocHost((void **)&ns, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_ns = s.card();
+	} else if (length_ns < s.card()) {
+		cudaFreeHost(ns);
+		if(cudaSuccess != cudaMallocHost((void **)&ns, s.card() * sizeof(long))) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		length_ns = s.card();
+	}
+
+	if(num_streams == 0) {
+		stream = (cudaStream_t *)malloc(s.card() * sizeof(cudaStream_t));
+		
+		for(long i = 0; i<s.card(); i++) {
+			if(cudaSuccess != cudaStreamCreate(&stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+		
+		num_streams = s.card();
+	} else if (num_streams < s.card()) {
+		stream = (cudaStream_t *)realloc(stream, s.card() * sizeof(cudaStream_t));
+		
+		for(long i = num_streams; i<s.card(); i++) {
+			if(cudaSuccess != cudaStreamCreate(&stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+		
+		num_streams = s.card();
 	}
 
 	for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
-		long ithPrime = context.ithPrime(i);
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &ithPrime, 
-			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		
-		long ns = rem(num, ithPrime);
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_B[j]), &ns, 
-			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		
 		if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
 			phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError()); }
+			
+		ithPrimes[j] = context.ithPrime(i);
+		if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
+			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		
+		ns[j] = rem(num, ithPrimes[j]);
+		if(cudaSuccess != cudaMemcpyAsync(&(vector_B2[j]), &(ns[j]), 
+			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
 	
 	for(long j = 0; j<s.card(); j++) {
@@ -467,21 +555,13 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 
 	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
 		if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, 
-								&(vector_A[j*(num_elements / s.card())]), 
-								(num_elements / s.card()) * sizeof(long), 
+								&(vector_A[j*phim]), 
+								phim * sizeof(long), 
 								cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 	}
-	
-	for(long i=0; i<s.card(); i++) {
-		if(cudaSuccess != cudaStreamDestroy(stream[i])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-	
-	cudaProfilerStop();
 
-	cudaFree(vector_A);
-	cudaFree(vector_B);
-	cudaFree(vector_C);
-
+//	cudaProfilerStop();
+	
 	FHE_TIMER_STOP;
 
   return *this;

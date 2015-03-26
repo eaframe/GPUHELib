@@ -117,6 +117,8 @@ void  TestIt(long R, long p, long r, long d, long c, long k, long w,
 
 
   long nslots = ea.size();
+  
+  cout << "nslots " << nslots << endl;
 
   PlaintextArray p0(ea);
   PlaintextArray p1(ea);
