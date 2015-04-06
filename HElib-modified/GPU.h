@@ -16,6 +16,6 @@ long *ithPrimes = NULL;
 long length_ithPrimes = 0;
 
 long *ns = NULL;
-long length_ns = 0;
+long length_ns = 0; 
 
 #endif
