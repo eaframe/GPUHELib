@@ -385,36 +385,62 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 
 	init_streams(s.card());
 	
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
-			phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+	if(prop.asyncEngineCount == 1) {
+		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
+				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_B1[j*phim]), (*other_map)[i]._vec__rep.rep, 
-			phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_B1[j*phim]), (*other_map)[i]._vec__rep.rep, 
+				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			
-		ithPrimes[j] = context.ithPrime(i);
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
-			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
-	
-	for(long j = 0; j<s.card(); j++) {
-		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-			vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
-			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-			vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
-			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-			vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
-			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			ithPrimes[j] = context.ithPrime(i);
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
+				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
-	}
+	
+		for(long j = 0; j<s.card(); j++) {
+			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			}
+		}
 
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, 
-								&(vector_A[j*phim]), 
-								phim * sizeof(long), 
-								cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+			if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, &(vector_A[j*phim]), 
+				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+	} else if (prop.asyncEngineCount == 2) {
+		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
+				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_B1[j*phim]), (*other_map)[i]._vec__rep.rep, 
+				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			
+			ithPrimes[j] = context.ithPrime(i);
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
+				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+				
+			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			}
+			
+			if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, &(vector_A[j*phim]), 
+				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
 	}
 
 //	cudaProfilerStop();
@@ -463,38 +489,66 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 	init_vector_host(&ns, s.card() * sizeof(long), s.card(), &length_ns);
 
 	init_streams(s.card());
-
-	for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
-			phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError()); }
-			
-		ithPrimes[j] = context.ithPrime(i);
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
-			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		
-		ns[j] = rem(num, ithPrimes[j]);
-		if(cudaSuccess != cudaMemcpyAsync(&(vector_B2[j]), &(ns[j]), 
-			sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-	}
 	
-	for(long j = 0; j<s.card(); j++) {
-		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-			vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
-			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-			vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
-			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-			vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
-			if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
-		}
-	}
+	if(prop.asyncEngineCount == 1) {
 
-	for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
-		if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, 
-								&(vector_A[j*phim]), 
-								phim * sizeof(long), 
-								cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
+				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError()); }
+			
+			ithPrimes[j] = context.ithPrime(i);
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
+				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		
+			ns[j] = rem(num, ithPrimes[j]);
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_B2[j]), &(ns[j]), 
+				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+	
+		for(long j = 0; j<s.card(); j++) {
+			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			}
+		}
+
+		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
+			if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, &(vector_A[j*phim]), 
+				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
+	} else if (prop.asyncEngineCount == 2) {
+		for(long i = 0, j=0; i <= s.last(); i = s.next(i), j++) {
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
+				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError()); }
+			
+			ithPrimes[j] = context.ithPrime(i);
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
+				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		
+			ns[j] = rem(num, ithPrimes[j]);
+			if(cudaSuccess != cudaMemcpyAsync(&(vector_B2[j]), &(ns[j]), 
+				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+				
+			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+			}
+			
+			if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, &(vector_A[j*phim]), 
+				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
+		}
 	}
 
 //	cudaProfilerStop();
