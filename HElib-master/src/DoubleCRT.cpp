@@ -98,8 +98,16 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
+  
+	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		FHE_NTIMER_START(AddVecs);
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		FHE_NTIMER_START(SubVecs);
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		FHE_NTIMER_START(MulVecs);
+	}
 
-	FHE_TIMER_START;
+	
   // add/sub/mul the data, element by element, modulo the respective primes
   for (long i = s.first(); i <= s.last(); i = s.next(i)) {
     long pi = context.ithPrime(i);
@@ -109,8 +117,7 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
     for (long j = 0; j < phim; j++)
       row[j] = fun.apply(row[j], other_row[j], pi);
   }
-
-	FHE_TIMER_STOP;
+  
   return *this;
 }
 
@@ -134,7 +141,14 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
   
-	FHE_TIMER_START;
+  	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		FHE_NTIMER_START(AddVecNum);
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		FHE_NTIMER_START(SubVecNum);
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		FHE_NTIMER_START(MulVecNum);
+	}
+	
   for (long i = s.first(); i <= s.last(); i = s.next(i)) {
     long pi = context.ithPrime(i);
     long n = rem(num, pi);  // n = num % pi
@@ -142,7 +156,7 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
     for (long j = 0; j < phim; j++)
       row[j] = fun.apply(row[j], n, pi);
   }
-	FHE_TIMER_STOP;
+
   return *this;
 }
 

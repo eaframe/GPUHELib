@@ -1,0 +1,11 @@
+*** Bound N=16484, choosing m=100000, phi(m)=40000
+nslots: 16
+
+  AddVecs: 1e-06 / 10 = 1e-07   [DoubleCRT.cpp:103]
+  AdditionCircuit: 1.02982 / 1 = 1.02982   [Test_GPUHE.cpp:79]
+  MulVecNum: 1e-06 / 2 = 5e-07   [DoubleCRT.cpp:149]
+  MulVecs: 1e-06 / 8 = 1.25e-07   [DoubleCRT.cpp:107]
+  MultiplicationCircuit: 1.23348 / 1 = 1.23348   [Test_GPUHE.cpp:118]
+  SubVecs: 3e-06 / 6 = 5e-07   [DoubleCRT.cpp:105]
+  SubtractionCircuit: 0.318261 / 1 = 0.318261   [Test_GPUHE.cpp:99]
+

@@ -367,7 +367,13 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	FHE_TIMER_START;
+	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		FHE_NTIMER_START(AddVecs);
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		FHE_NTIMER_START(SubVecs);
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		FHE_NTIMER_START(MulVecs);
+	}
 	
 //	cudaProfilerStart();
 	
@@ -400,13 +406,13 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 	
 		for(long j = 0; j<s.card(); j++) {
 			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				vectorAddMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				vectorSubMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				vectorMultMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			}
 		}
@@ -428,13 +434,13 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 				
 			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				vectorAddMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				vectorSubMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
+				vectorMultMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, vector_B1, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			}
 			
@@ -444,8 +450,6 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 	}
 
 //	cudaProfilerStop();
-	
-	FHE_TIMER_STOP;
   
   return *this;
 }
@@ -470,7 +474,13 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
-	FHE_TIMER_START;
+	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		FHE_NTIMER_START(AddVecNum);
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		FHE_NTIMER_START(SubVecNum);
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		FHE_NTIMER_START(MulVecNum);
+	}
 	
 //	cudaProfilerStart();
 	
@@ -507,13 +517,13 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 	
 		for(long j = 0; j<s.card(); j++) {
 			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				vectorAddMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				vectorSubMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				vectorMultMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			}
 		}
@@ -536,13 +546,13 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 				
 			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-				vectorAddMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				vectorAddMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-				vectorSubMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				vectorSubMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-				vectorMultMod<<<phim/threads_per_block, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
+				vectorMultMod<<<phim/threads_per_block + 1, threads_per_block, 0, stream[j]>>>(vector_A, phim, phim, j*phim);
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			}
 			
@@ -552,8 +562,6 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 	}
 
 //	cudaProfilerStop();
-	
-	FHE_TIMER_STOP;
 
   return *this;
 }
