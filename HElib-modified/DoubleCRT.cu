@@ -367,15 +367,31 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
+	static FHEtimer *vecsTimer = 0;
+	
 	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		FHE_NTIMER_START(AddVecs);
+		buildTimer(vecsTimer, "AddVecs", FHE_AT);
 	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-		FHE_NTIMER_START(SubVecs);
+		buildTimer(vecsTimer, "SubVecs", FHE_AT);
 	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-		FHE_NTIMER_START(MulVecs);
+		buildTimer(vecsTimer, "MulVecs", FHE_AT);
 	}
 	
+  	auto_timer vecsAutoTimer(vecsTimer);
+	
 //	cudaProfilerStart();
+
+	static FHEtimer *vecsSetupTimer = 0;
+	
+	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+		buildTimer(vecsSetupTimer, "AddVecsSetup", FHE_AT);
+	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+		buildTimer(vecsSetupTimer, "SubVecsSetup", FHE_AT);
+	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+		buildTimer(vecsSetupTimer, "MulVecsSetup", FHE_AT);
+	}
+	
+  	auto_timer vecsSetupAutoTimer(vecsSetupTimer);
 	
 	cudaDeviceProp prop;
 	cudaGetDeviceProperties(&prop, 0);
@@ -391,7 +407,21 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 
 	init_streams(s.card());
 	
+	vecsSetupAutoTimer.stop();
+	
 	if(prop.asyncEngineCount == 1) {
+		static FHEtimer *vecsPhase1Timer = 0;
+	
+		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+			buildTimer(vecsPhase1Timer, "AddVecsPhase1", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+			buildTimer(vecsPhase1Timer, "SubVecsPhase1", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+			buildTimer(vecsPhase1Timer, "MulVecsPhase1", FHE_AT);
+		}
+	
+	  	auto_timer vecsPhase1AutoTimer(vecsPhase1Timer);
+	  	
 		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
 			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
 				phim * sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
@@ -403,6 +433,20 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 			if(cudaSuccess != cudaMemcpyAsync(&(vector_C[j]), &(ithPrimes[j]), 
 				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
+		
+		vecsPhase1AutoTimer.stop();
+		
+		static FHEtimer *vecsPhase2Timer = 0;
+	
+		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+			buildTimer(vecsPhase2Timer, "AddVecsPhase2", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+			buildTimer(vecsPhase2Timer, "SubVecsPhase2", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+			buildTimer(vecsPhase2Timer, "MulVecsPhase2", FHE_AT);
+		}
+	
+	  	auto_timer vecsPhase2AutoTimer(vecsPhase2Timer);
 	
 		for(long j = 0; j<s.card(); j++) {
 			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
@@ -416,11 +460,27 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			}
 		}
+		
+		vecsPhase2AutoTimer.stop();
+		
+		static FHEtimer *vecsPhase3Timer = 0;
+	
+		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+			buildTimer(vecsPhase3Timer, "AddVecsPhase3", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+			buildTimer(vecsPhase3Timer, "SubVecsPhase3", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+			buildTimer(vecsPhase3Timer, "MulVecsPhase3", FHE_AT);
+		}
+	
+	  	auto_timer vecsPhase3AutoTimer(vecsPhase3Timer);
 
 		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
 			if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, &(vector_A[j*phim]), 
 				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
+		
+		vecsPhase3AutoTimer.stop();
 	} else if (prop.asyncEngineCount == 2) {
 		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
 			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
@@ -448,6 +508,8 @@ DoubleCRT& DoubleCRT::Op(const DoubleCRT &other, Fun fun,
 				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
 	}
+	
+	vecsAutoTimer.stop();
 
 //	cudaProfilerStop();
   
@@ -474,13 +536,17 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
   const IndexSet& s = map.getIndexSet();
   long phim = context.zMStar.getPhiM();
 
+	static FHEtimer *vecsTimer = 0;
+	
 	if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
-		FHE_NTIMER_START(AddVecNum);
+		buildTimer(vecsTimer, "AddVecNum", FHE_AT);
 	} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
-		FHE_NTIMER_START(SubVecNum);
+		buildTimer(vecsTimer, "SubVecNum", FHE_AT);
 	} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
-		FHE_NTIMER_START(MulVecNum);
+		buildTimer(vecsTimer, "MulVecNum", FHE_AT);
 	}
+	
+  	auto_timer vecsAutoTimer(vecsTimer);
 	
 //	cudaProfilerStart();
 	
@@ -501,6 +567,18 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 	init_streams(s.card());
 	
 	if(prop.asyncEngineCount == 1) {
+		
+		static FHEtimer *vecsPhase1Timer = 0;
+	
+		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+			buildTimer(vecsPhase1Timer, "AddVecNumPhase1", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+			buildTimer(vecsPhase1Timer, "SubVecNumPhase1", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+			buildTimer(vecsPhase1Timer, "MulVecNumPhase1", FHE_AT);
+		}
+	
+	  	auto_timer vecsPhase1AutoTimer(vecsPhase1Timer);
 
 		for(long i = s.first(), j=0; i <= s.last(); i = s.next(i), j++) {
 			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
@@ -514,6 +592,20 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 			if(cudaSuccess != cudaMemcpyAsync(&(vector_B2[j]), &(ns[j]), 
 				sizeof(long), cudaMemcpyHostToDevice, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
+		
+		vecsPhase1AutoTimer.stop();
+		
+		static FHEtimer *vecsPhase2Timer = 0;
+	
+		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+			buildTimer(vecsPhase2Timer, "AddVecNumPhase2", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+			buildTimer(vecsPhase2Timer, "SubVecNumPhase2", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+			buildTimer(vecsPhase2Timer, "MulVecNumPhase2", FHE_AT);
+		}
+	
+	  	auto_timer vecsPhase2AutoTimer(vecsPhase2Timer);
 	
 		for(long j = 0; j<s.card(); j++) {
 			if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
@@ -527,11 +619,25 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 				if ( cudaSuccess != cudaPeekAtLastError() ) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 			}
 		}
+		
+		static FHEtimer *vecsPhase3Timer = 0;
+	
+		if(typeid(fun) == typeid(DoubleCRT::AddFun)) {
+			buildTimer(vecsPhase3Timer, "AddVecNumPhase3", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::SubFun)) {
+			buildTimer(vecsPhase3Timer, "SubVecNumPhase3", FHE_AT);
+		} else if (typeid(fun) == typeid(DoubleCRT::MulFun)) {
+			buildTimer(vecsPhase3Timer, "MulVecNumPhase3", FHE_AT);
+		}
+	
+	  	auto_timer vecsPhase3AutoTimer(vecsPhase3Timer);
 
 		for(long i = s.first(), j = 0; i <= s.last(); i = s.next(i), j++) {
 			if(cudaSuccess != cudaMemcpyAsync(map[i]._vec__rep.rep, &(vector_A[j*phim]), 
 				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
+		
+		vecsPhase3AutoTimer.stop();
 	} else if (prop.asyncEngineCount == 2) {
 		for(long i = 0, j=0; i <= s.last(); i = s.next(i), j++) {
 			if(cudaSuccess != cudaMemcpyAsync(&(vector_A[j*phim]), map[i]._vec__rep.rep, 
@@ -560,6 +666,8 @@ DoubleCRT& DoubleCRT::Op(const ZZ &num, Fun fun)
 				phim * sizeof(long), cudaMemcpyDeviceToHost, stream[j])) { GPU_error(__FILE__, __LINE__, cudaGetLastError());}
 		}
 	}
+	
+	vecsAutoTimer.stop();
 
 //	cudaProfilerStop();
 

@@ -1,11 +1,20 @@
 *** Bound N=16484, choosing m=10000, phi(m)=4000
 nslots: 8
 
-  AddVecs: 1e-06 / 10 = 1e-07   [DoubleCRT.cpp:103]
-  AdditionCircuit: 0.072512 / 1 = 0.072512   [Test_GPUHE.cpp:79]
-  MulVecNum: 1e-06 / 2 = 5e-07   [DoubleCRT.cpp:149]
-  MulVecs: 1e-06 / 8 = 1.25e-07   [DoubleCRT.cpp:107]
-  MultiplicationCircuit: 0.097453 / 1 = 0.097453   [Test_GPUHE.cpp:118]
-  SubVecs: 3e-06 / 6 = 5e-07   [DoubleCRT.cpp:105]
-  SubtractionCircuit: 0.024304 / 1 = 0.024304   [Test_GPUHE.cpp:99]
+  AddVecs: 0.00013 / 4 = 3.25e-05   [DoubleCRT.cpp:104]
+  AdditionCircuit: 0.071037 / 1 = 0.071037   [Test_GPUHE.cpp:79]
+  MulVecs: 0.000263 / 1 = 0.000263   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 6.1e-05 / 2 = 3.05e-05   [DoubleCRT.cpp:104]
+  MulVecs: 0.00026 / 1 = 0.00026   [DoubleCRT.cpp:108]
+  SubVecs: 7.1e-05 / 2 = 3.55e-05   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 0.024009 / 1 = 0.024009   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.000105 / 4 = 2.625e-05   [DoubleCRT.cpp:104]
+  MulVecNum: 0.000458 / 2 = 0.000229   [DoubleCRT.cpp:155]
+  MulVecs: 0.00138 / 6 = 0.00023   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 0.095753 / 1 = 0.095753   [Test_GPUHE.cpp:126]
+  SubVecs: 0.000152 / 4 = 3.8e-05   [DoubleCRT.cpp:106]
 

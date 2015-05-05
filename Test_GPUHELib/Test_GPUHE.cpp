@@ -93,7 +93,11 @@ int main(int argc, char** argv) {
 		} 
     }
     
-    FHE_NTIMER_STOP(AdditionCircuit);
+	FHE_NTIMER_STOP(AdditionCircuit);
+	cerr << endl;
+	printAllTimers();
+	cerr << endl;
+	resetAllTimers();
 	
 	//SUBTRACTION
     FHE_NTIMER_START(SubtractionCircuit);
@@ -112,7 +116,11 @@ int main(int argc, char** argv) {
 		} 
     }
     
-    FHE_NTIMER_STOP(SubtractionCircuit);
+	FHE_NTIMER_STOP(SubtractionCircuit);
+	cerr << endl;
+	printAllTimers();
+	cerr << endl;
+	resetAllTimers();
 	
 	//MULTIPLICATION
 	FHE_NTIMER_START(MultiplicationCircuit);
@@ -131,9 +139,8 @@ int main(int argc, char** argv) {
 		} 
     }
     
-   FHE_NTIMER_STOP(MultiplicationCircuit);
-    
-     cerr << endl;
+	FHE_NTIMER_STOP(MultiplicationCircuit);
+	cerr << endl;
 	printAllTimers();
 	cerr << endl;
 
