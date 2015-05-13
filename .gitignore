@@ -3,4 +3,4 @@ Test_GPUHELib/Test_GPUHE_HELib_master
 Test_GPUHELib/Test_GPUHE_HELib_modified
 Test_GPUHELib/out_*
 HElib-master/src/Test*
-HElib-modified/Test*
+HElib-modified/src/Test*
