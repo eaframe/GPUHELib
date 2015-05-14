@@ -76,11 +76,13 @@ int main(int argc, char** argv) {
     
     //ADDITION
     setTimersOn();
-    FHE_NTIMER_START(AdditionCircuit);
     
     Ctxt ctSum = ct1;
+
+    FHE_NTIMER_START(AdditionCircuit);
     ctSum += ct2;
-    
+    FHE_NTIMER_STOP(AdditionCircuit);
+   
     vector<long> res;
     ea.decrypt(ctSum, secretKey, res);
 
@@ -92,18 +94,18 @@ int main(int argc, char** argv) {
 			cout << "Error at index " << i << ", value " << res[i] << " != " << (v1[i] + v2[i]) % p << endl;
 		} 
     }
-    
-	FHE_NTIMER_STOP(AdditionCircuit);
 	cerr << endl;
 	printAllTimers();
 	cerr << endl;
 	resetAllTimers();
 	
 	//SUBTRACTION
-    FHE_NTIMER_START(SubtractionCircuit);
     
     Ctxt ctSub = ct1;
+
+    FHE_NTIMER_START(SubtractionCircuit);
     ctSub -= ct2;
+    FHE_NTIMER_STOP(SubtractionCircuit);
     
     ea.decrypt(ctSub, secretKey, res);
 
@@ -116,17 +118,18 @@ int main(int argc, char** argv) {
 		} 
     }
     
-	FHE_NTIMER_STOP(SubtractionCircuit);
 	cerr << endl;
 	printAllTimers();
 	cerr << endl;
 	resetAllTimers();
 	
 	//MULTIPLICATION
-	FHE_NTIMER_START(MultiplicationCircuit);
     
     Ctxt ctProd = ct1;
+
+    FHE_NTIMER_START(MultiplicationCircuit);
     ctProd *= ct2;
+    FHE_NTIMER_STOP(MultiplicationCircuit);
     
     ea.decrypt(ctProd, secretKey, res);
 
@@ -139,7 +142,6 @@ int main(int argc, char** argv) {
 		} 
     }
     
-	FHE_NTIMER_STOP(MultiplicationCircuit);
 	cerr << endl;
 	printAllTimers();
 	cerr << endl;

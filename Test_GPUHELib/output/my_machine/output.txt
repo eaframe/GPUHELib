@@ -1,0 +1,450 @@
+*** Bound N=16484, choosing m=100000, phi(m)=40000
+nslots: 16
+
+  AddVecs: 0.001727 / 4 = 0.00043175   [DoubleCRT.cpp:104]
+  AdditionCircuit: 0.994927 / 1 = 0.994927   [Test_GPUHE.cpp:79]
+  MulVecs: 0.002637 / 1 = 0.002637   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 0.000712 / 2 = 0.000356   [DoubleCRT.cpp:104]
+  MulVecs: 0.002603 / 1 = 0.002603   [DoubleCRT.cpp:108]
+  SubVecs: 0.000965 / 2 = 0.0004825   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 0.305194 / 1 = 0.305194   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.001193 / 4 = 0.00029825   [DoubleCRT.cpp:104]
+  MulVecNum: 0.004598 / 2 = 0.002299   [DoubleCRT.cpp:155]
+  MulVecs: 0.013718 / 6 = 0.00228633   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 1.18443 / 1 = 1.18443   [Test_GPUHE.cpp:126]
+  SubVecs: 0.001995 / 4 = 0.00049875   [DoubleCRT.cpp:106]
+
+*** Bound N=16484, choosing m=10000, phi(m)=4000
+nslots: 8
+
+  AddVecs: 0.00013 / 4 = 3.25e-05   [DoubleCRT.cpp:104]
+  AdditionCircuit: 0.071037 / 1 = 0.071037   [Test_GPUHE.cpp:79]
+  MulVecs: 0.000263 / 1 = 0.000263   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 6.1e-05 / 2 = 3.05e-05   [DoubleCRT.cpp:104]
+  MulVecs: 0.00026 / 1 = 0.00026   [DoubleCRT.cpp:108]
+  SubVecs: 7.1e-05 / 2 = 3.55e-05   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 0.024009 / 1 = 0.024009   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.000105 / 4 = 2.625e-05   [DoubleCRT.cpp:104]
+  MulVecNum: 0.000458 / 2 = 0.000229   [DoubleCRT.cpp:155]
+  MulVecs: 0.00138 / 6 = 0.00023   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 0.095753 / 1 = 0.095753   [Test_GPUHE.cpp:126]
+  SubVecs: 0.000152 / 4 = 3.8e-05   [DoubleCRT.cpp:106]
+
+*** Bound N=16484, choosing m=1000, phi(m)=400
+nslots: 4
+
+  AddVecs: 1.6e-05 / 4 = 4e-06   [DoubleCRT.cpp:104]
+  AdditionCircuit: 0.004531 / 1 = 0.004531   [Test_GPUHE.cpp:79]
+  MulVecs: 2.8e-05 / 1 = 2.8e-05   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 7e-06 / 2 = 3.5e-06   [DoubleCRT.cpp:104]
+  MulVecs: 2.6e-05 / 1 = 2.6e-05   [DoubleCRT.cpp:108]
+  SubVecs: 6e-06 / 2 = 3e-06   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 0.001491 / 1 = 0.001491   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 1.2e-05 / 4 = 3e-06   [DoubleCRT.cpp:104]
+  MulVecNum: 4.7e-05 / 2 = 2.35e-05   [DoubleCRT.cpp:155]
+  MulVecs: 0.000139 / 6 = 2.31667e-05   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 0.00486 / 1 = 0.00486   [Test_GPUHE.cpp:126]
+  SubVecs: 1.2e-05 / 4 = 3e-06   [DoubleCRT.cpp:106]
+
+*** Bound N=16484, choosing m=200000, phi(m)=80000
+nslots: 32
+
+  AddVecs: 0.003983 / 4 = 0.00099575   [DoubleCRT.cpp:104]
+  AdditionCircuit: 2.63923 / 1 = 2.63923   [Test_GPUHE.cpp:79]
+  MulVecs: 0.005226 / 1 = 0.005226   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 0.002083 / 2 = 0.0010415   [DoubleCRT.cpp:104]
+  MulVecs: 0.005243 / 1 = 0.005243   [DoubleCRT.cpp:108]
+  SubVecs: 0.002091 / 2 = 0.0010455   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 0.663329 / 1 = 0.663329   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.003135 / 4 = 0.00078375   [DoubleCRT.cpp:104]
+  MulVecNum: 0.009193 / 2 = 0.0045965   [DoubleCRT.cpp:155]
+  MulVecs: 0.027509 / 6 = 0.00458483   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 3.08873 / 1 = 3.08873   [Test_GPUHE.cpp:126]
+  SubVecs: 0.003704 / 4 = 0.000926   [DoubleCRT.cpp:106]
+
+*** Bound N=16484, choosing m=300000, phi(m)=80000
+nslots: 32
+
+  AddVecs: 0.003906 / 4 = 0.0009765   [DoubleCRT.cpp:104]
+  AdditionCircuit: 3.86438 / 1 = 3.86438   [Test_GPUHE.cpp:79]
+  MulVecs: 0.00527 / 1 = 0.00527   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 0.002048 / 2 = 0.001024   [DoubleCRT.cpp:104]
+  MulVecs: 0.005379 / 1 = 0.005379   [DoubleCRT.cpp:108]
+  SubVecs: 0.002095 / 2 = 0.0010475   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 1.18101 / 1 = 1.18101   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.003161 / 4 = 0.00079025   [DoubleCRT.cpp:104]
+  MulVecNum: 0.009176 / 2 = 0.004588   [DoubleCRT.cpp:155]
+  MulVecs: 0.027432 / 6 = 0.004572   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 5.13499 / 1 = 5.13499   [Test_GPUHE.cpp:126]
+  SubVecs: 0.003502 / 4 = 0.0008755   [DoubleCRT.cpp:106]
+
+*** Bound N=16484, choosing m=400000, phi(m)=160000
+nslots: 64
+
+  AddVecs: 0.008423 / 4 = 0.00210575   [DoubleCRT.cpp:104]
+  AdditionCircuit: 7.30595 / 1 = 7.30595   [Test_GPUHE.cpp:79]
+  MulVecs: 0.010539 / 1 = 0.010539   [DoubleCRT.cpp:108]
+
+
+  AddVecs: 0.004346 / 2 = 0.002173   [DoubleCRT.cpp:104]
+  MulVecs: 0.010531 / 1 = 0.010531   [DoubleCRT.cpp:108]
+  SubVecs: 0.004204 / 2 = 0.002102   [DoubleCRT.cpp:106]
+  SubtractionCircuit: 1.48909 / 1 = 1.48909   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.007447 / 4 = 0.00186175   [DoubleCRT.cpp:104]
+  MulVecNum: 0.018484 / 2 = 0.009242   [DoubleCRT.cpp:155]
+  MulVecs: 0.054976 / 6 = 0.00916267   [DoubleCRT.cpp:108]
+  MultiplicationCircuit: 8.35265 / 1 = 8.35265   [Test_GPUHE.cpp:126]
+  SubVecs: 0.007167 / 4 = 0.00179175   [DoubleCRT.cpp:106]
+
+*** Bound N=16484, choosing m=100000, phi(m)=40000
+nslots: 16
+
+  AddVecs: 0.010035 / 4 = 0.00250875   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.004738 / 4 = 0.0011845   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000139 / 4 = 3.475e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.00378 / 4 = 0.000945   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001371 / 4 = 0.00034275   [DoubleCRT.cu:387]
+  AdditionCircuit: 1.0173 / 1 = 1.0173   [Test_GPUHE.cpp:79]
+  MulVecs: 0.021276 / 1 = 0.021276   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.001172 / 1 = 0.001172   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.3e-05 / 1 = 4.3e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.019693 / 1 = 0.019693   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000366 / 1 = 0.000366   [DoubleCRT.cu:391]
+
+
+  AddVecs: 0.00495 / 2 = 0.002475   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.002256 / 2 = 0.001128   [DoubleCRT.cu:416]
+  AddVecsPhase2: 6.6e-05 / 2 = 3.3e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.001953 / 2 = 0.0009765   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.000672 / 2 = 0.000336   [DoubleCRT.cu:387]
+  MulVecs: 0.021265 / 1 = 0.021265   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.001118 / 1 = 0.001118   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.3e-05 / 1 = 4.3e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.019736 / 1 = 0.019736   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000366 / 1 = 0.000366   [DoubleCRT.cu:391]
+  SubVecs: 0.005116 / 2 = 0.002558   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.002429 / 2 = 0.0012145   [DoubleCRT.cu:418]
+  SubVecsPhase2: 7.7e-05 / 2 = 3.85e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.001885 / 2 = 0.0009425   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.000718 / 2 = 0.000359   [DoubleCRT.cu:389]
+  SubtractionCircuit: 0.3303 / 1 = 0.3303   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.008729 / 4 = 0.00218225   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.003887 / 4 = 0.00097175   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000126 / 4 = 3.15e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.003344 / 4 = 0.000836   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001361 / 4 = 0.00034025   [DoubleCRT.cu:387]
+  MulVecNum: 0.013095 / 2 = 0.0065475   [DoubleCRT.cu:546]
+  MulVecNumPhase1: 0.000805 / 2 = 0.0004025   [DoubleCRT.cu:578]
+  MulVecNumPhase2: 0.010877 / 2 = 0.0054385   [DoubleCRT.cu:605]
+  MulVecNumPhase3: 0.010801 / 2 = 0.0054005   [DoubleCRT.cu:630]
+  MulVecs: 0.125396 / 6 = 0.0208993   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.006331 / 6 = 0.00105517   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.000224 / 6 = 3.73333e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.116677 / 6 = 0.0194462   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.002154 / 6 = 0.000359   [DoubleCRT.cu:391]
+  MultiplicationCircuit: 1.34802 / 1 = 1.34802   [Test_GPUHE.cpp:126]
+  SubVecs: 0.010062 / 4 = 0.0025155   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.004995 / 4 = 0.00124875   [DoubleCRT.cu:418]
+  SubVecsPhase2: 0.000167 / 4 = 4.175e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.003326 / 4 = 0.0008315   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.001566 / 4 = 0.0003915   [DoubleCRT.cu:389]
+
+*** Bound N=16484, choosing m=10000, phi(m)=4000
+nslots: 8
+
+  AddVecs: 0.002587 / 4 = 0.00064675   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.000506 / 4 = 0.0001265   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000112 / 4 = 2.8e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.000662 / 4 = 0.0001655   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001299 / 4 = 0.00032475   [DoubleCRT.cu:387]
+  AdditionCircuit: 0.081253 / 1 = 0.081253   [Test_GPUHE.cpp:79]
+  MulVecs: 0.002905 / 1 = 0.002905   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.000123 / 1 = 0.000123   [DoubleCRT.cu:420]
+  MulVecsPhase2: 2.8e-05 / 1 = 2.8e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.002425 / 1 = 0.002425   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000326 / 1 = 0.000326   [DoubleCRT.cu:391]
+
+
+  AddVecs: 0.001306 / 2 = 0.000653   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.00026 / 2 = 0.00013   [DoubleCRT.cu:416]
+  AddVecsPhase2: 5.9e-05 / 2 = 2.95e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.000328 / 2 = 0.000164   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.000656 / 2 = 0.000328   [DoubleCRT.cu:387]
+  MulVecs: 0.002902 / 1 = 0.002902   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.000124 / 1 = 0.000124   [DoubleCRT.cu:420]
+  MulVecsPhase2: 2.9e-05 / 1 = 2.9e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.002425 / 1 = 0.002425   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000322 / 1 = 0.000322   [DoubleCRT.cu:391]
+  SubVecs: 0.001616 / 2 = 0.000808   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.000256 / 2 = 0.000128   [DoubleCRT.cu:418]
+  SubVecsPhase2: 7.4e-05 / 2 = 3.7e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.000574 / 2 = 0.000287   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.000707 / 2 = 0.0003535   [DoubleCRT.cu:389]
+  SubtractionCircuit: 0.028734 / 1 = 0.028734   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.002471 / 4 = 0.00061775   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.000428 / 4 = 0.000107   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000111 / 4 = 2.775e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.000621 / 4 = 0.00015525   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001308 / 4 = 0.000327   [DoubleCRT.cu:387]
+  MulVecNum: 0.002255 / 2 = 0.0011275   [DoubleCRT.cu:546]
+  MulVecNumPhase1: 0.000131 / 2 = 6.55e-05   [DoubleCRT.cu:578]
+  MulVecNumPhase2: 0.001452 / 2 = 0.000726   [DoubleCRT.cu:605]
+  MulVecNumPhase3: 0.0014 / 2 = 0.0007   [DoubleCRT.cu:630]
+  MulVecs: 0.017085 / 6 = 0.0028475   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.000575 / 6 = 9.58333e-05   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.000156 / 6 = 2.6e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.014391 / 6 = 0.0023985   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.001956 / 6 = 0.000326   [DoubleCRT.cu:391]
+  MultiplicationCircuit: 0.123332 / 1 = 0.123332   [Test_GPUHE.cpp:126]
+  SubVecs: 0.003744 / 4 = 0.000936   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.000463 / 4 = 0.00011575   [DoubleCRT.cu:418]
+  SubVecsPhase2: 0.000158 / 4 = 3.95e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.001581 / 4 = 0.00039525   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.001529 / 4 = 0.00038225   [DoubleCRT.cu:389]
+
+*** Bound N=16484, choosing m=1000, phi(m)=400
+nslots: 4
+
+  AddVecs: 0.003259 / 4 = 0.00081475   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.000198 / 4 = 4.95e-05   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000114 / 4 = 2.85e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.001611 / 4 = 0.00040275   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001331 / 4 = 0.00033275   [DoubleCRT.cu:387]
+  AdditionCircuit: 0.00891 / 1 = 0.00891   [Test_GPUHE.cpp:79]
+  MulVecs: 0.001217 / 1 = 0.001217   [DoubleCRT.cu:377]
+  MulVecsPhase1: 5e-05 / 1 = 5e-05   [DoubleCRT.cu:420]
+  MulVecsPhase2: 2.9e-05 / 1 = 2.9e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.000812 / 1 = 0.000812   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000324 / 1 = 0.000324   [DoubleCRT.cu:391]
+
+
+  AddVecs: 0.001577 / 2 = 0.0007885   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.000101 / 2 = 5.05e-05   [DoubleCRT.cu:416]
+  AddVecsPhase2: 5.7e-05 / 2 = 2.85e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.000768 / 2 = 0.000384   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.00065 / 2 = 0.000325   [DoubleCRT.cu:387]
+  MulVecs: 0.001238 / 1 = 0.001238   [DoubleCRT.cu:377]
+  MulVecsPhase1: 4.9e-05 / 1 = 4.9e-05   [DoubleCRT.cu:420]
+  MulVecsPhase2: 2.8e-05 / 1 = 2.8e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.000832 / 1 = 0.000832   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000326 / 1 = 0.000326   [DoubleCRT.cu:391]
+  SubVecs: 0.001621 / 2 = 0.0008105   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.0001 / 2 = 5e-05   [DoubleCRT.cu:418]
+  SubVecsPhase2: 6.1e-05 / 2 = 3.05e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.000791 / 2 = 0.0003955   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.000664 / 2 = 0.000332   [DoubleCRT.cu:389]
+  SubtractionCircuit: 0.005933 / 1 = 0.005933   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.003155 / 4 = 0.00078875   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.000176 / 4 = 4.4e-05   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000105 / 4 = 2.625e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.00155 / 4 = 0.0003875   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001314 / 4 = 0.0003285   [DoubleCRT.cu:387]
+  MulVecNum: 0.001725 / 2 = 0.0008625   [DoubleCRT.cu:546]
+  MulVecNumPhase1: 8.8e-05 / 2 = 4.4e-05   [DoubleCRT.cu:578]
+  MulVecNumPhase2: 0.000361 / 2 = 0.0001805   [DoubleCRT.cu:605]
+  MulVecNumPhase3: 0.000308 / 2 = 0.000154   [DoubleCRT.cu:630]
+  MulVecs: 0.007355 / 6 = 0.00122583   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.000257 / 6 = 4.28333e-05   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.000153 / 6 = 2.55e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.004943 / 6 = 0.000823833   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.001996 / 6 = 0.000332667   [DoubleCRT.cu:391]
+  MultiplicationCircuit: 0.020618 / 1 = 0.020618   [Test_GPUHE.cpp:126]
+  SubVecs: 0.003205 / 4 = 0.00080125   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.000174 / 4 = 4.35e-05   [DoubleCRT.cu:418]
+  SubVecsPhase2: 0.000108 / 4 = 2.7e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.001526 / 4 = 0.0003815   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.00139 / 4 = 0.0003475   [DoubleCRT.cu:389]
+
+*** Bound N=16484, choosing m=200000, phi(m)=80000
+nslots: 32
+
+  AddVecs: 0.020235 / 4 = 0.00505875   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.009153 / 4 = 0.00228825   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000178 / 4 = 4.45e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.008447 / 4 = 0.00211175   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.002443 / 4 = 0.00061075   [DoubleCRT.cu:387]
+  AdditionCircuit: 2.69069 / 1 = 2.69069   [Test_GPUHE.cpp:79]
+  MulVecs: 0.050804 / 1 = 0.050804   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.002347 / 1 = 0.002347   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.7e-05 / 1 = 4.7e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.048034 / 1 = 0.048034   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000371 / 1 = 0.000371   [DoubleCRT.cu:391]
+
+
+  AddVecs: 0.00952 / 2 = 0.00476   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.004488 / 2 = 0.002244   [DoubleCRT.cu:416]
+  AddVecsPhase2: 9e-05 / 2 = 4.5e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.004225 / 2 = 0.0021125   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.000709 / 2 = 0.0003545   [DoubleCRT.cu:387]
+  MulVecs: 0.05088 / 1 = 0.05088   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.002354 / 1 = 0.002354   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.5e-05 / 1 = 4.5e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.048077 / 1 = 0.048077   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.0004 / 1 = 0.0004   [DoubleCRT.cu:391]
+  SubVecs: 0.009648 / 2 = 0.004824   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.004603 / 2 = 0.0023015   [DoubleCRT.cu:418]
+  SubVecsPhase2: 9.3e-05 / 2 = 4.65e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.004187 / 2 = 0.0020935   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.000756 / 2 = 0.000378   [DoubleCRT.cu:389]
+  SubtractionCircuit: 0.720918 / 1 = 0.720918   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.016862 / 4 = 0.0042155   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.007831 / 4 = 0.00195775   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000163 / 4 = 4.075e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.007427 / 4 = 0.00185675   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.00143 / 4 = 0.0003575   [DoubleCRT.cu:387]
+  MulVecNum: 0.029894 / 2 = 0.014947   [DoubleCRT.cu:546]
+  MulVecNumPhase1: 0.001622 / 2 = 0.000811   [DoubleCRT.cu:578]
+  MulVecNumPhase2: 0.026794 / 2 = 0.013397   [DoubleCRT.cu:605]
+  MulVecNumPhase3: 0.026715 / 2 = 0.0133575   [DoubleCRT.cu:630]
+  MulVecs: 0.276141 / 6 = 0.0460235   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.012262 / 6 = 0.00204367   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.000256 / 6 = 4.26667e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.261351 / 6 = 0.0435585   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.002253 / 6 = 0.0003755   [DoubleCRT.cu:391]
+  MultiplicationCircuit: 3.44509 / 1 = 3.44509   [Test_GPUHE.cpp:126]
+  SubVecs: 0.017152 / 4 = 0.004288   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.008027 / 4 = 0.00200675   [DoubleCRT.cu:418]
+  SubVecsPhase2: 0.00018 / 4 = 4.5e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.007367 / 4 = 0.00184175   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.001565 / 4 = 0.00039125   [DoubleCRT.cu:389]
+
+*** Bound N=16484, choosing m=300000, phi(m)=80000
+nslots: 32
+
+  AddVecs: 0.019 / 4 = 0.00475   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.008883 / 4 = 0.00222075   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000174 / 4 = 4.35e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.008522 / 4 = 0.0021305   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001409 / 4 = 0.00035225   [DoubleCRT.cu:387]
+  AdditionCircuit: 3.89683 / 1 = 3.89683   [Test_GPUHE.cpp:79]
+  MulVecs: 0.050792 / 1 = 0.050792   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.002335 / 1 = 0.002335   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.6e-05 / 1 = 4.6e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.048043 / 1 = 0.048043   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000364 / 1 = 0.000364   [DoubleCRT.cu:391]
+
+
+  AddVecs: 0.009598 / 2 = 0.004799   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.004538 / 2 = 0.002269   [DoubleCRT.cu:416]
+  AddVecsPhase2: 9.2e-05 / 2 = 4.6e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.004248 / 2 = 0.002124   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.000715 / 2 = 0.0003575   [DoubleCRT.cu:387]
+  MulVecs: 0.050906 / 1 = 0.050906   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.002336 / 1 = 0.002336   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.6e-05 / 1 = 4.6e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.048147 / 1 = 0.048147   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000375 / 1 = 0.000375   [DoubleCRT.cu:391]
+  SubVecs: 0.009676 / 2 = 0.004838   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.004612 / 2 = 0.002306   [DoubleCRT.cu:418]
+  SubVecsPhase2: 9.7e-05 / 2 = 4.85e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.004228 / 2 = 0.002114   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.000733 / 2 = 0.0003665   [DoubleCRT.cu:389]
+  SubtractionCircuit: 1.23249 / 1 = 1.23249   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.017895 / 4 = 0.00447375   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.00773 / 4 = 0.0019325   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.00016 / 4 = 4e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.008568 / 4 = 0.002142   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.001426 / 4 = 0.0003565   [DoubleCRT.cu:387]
+  MulVecNum: 0.02767 / 2 = 0.013835   [DoubleCRT.cu:546]
+  MulVecNumPhase1: 0.001606 / 2 = 0.000803   [DoubleCRT.cu:578]
+  MulVecNumPhase2: 0.024662 / 2 = 0.012331   [DoubleCRT.cu:605]
+  MulVecNumPhase3: 0.024577 / 2 = 0.0122885   [DoubleCRT.cu:630]
+  MulVecs: 0.285837 / 6 = 0.0476395   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.012105 / 6 = 0.0020175   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.000253 / 6 = 4.21667e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.271192 / 6 = 0.0451987   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.002272 / 6 = 0.000378667   [DoubleCRT.cu:391]
+  MultiplicationCircuit: 5.49107 / 1 = 5.49107   [Test_GPUHE.cpp:126]
+  SubVecs: 0.017571 / 4 = 0.00439275   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.008129 / 4 = 0.00203225   [DoubleCRT.cu:418]
+  SubVecsPhase2: 0.000194 / 4 = 4.85e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.007649 / 4 = 0.00191225   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.001581 / 4 = 0.00039525   [DoubleCRT.cu:389]
+
+*** Bound N=16484, choosing m=400000, phi(m)=160000
+nslots: 64
+
+  AddVecs: 0.06856 / 4 = 0.01714   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.027646 / 4 = 0.0069115   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000368 / 4 = 9.2e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.037243 / 4 = 0.00931075   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.003282 / 4 = 0.0008205   [DoubleCRT.cu:387]
+  AdditionCircuit: 11.2902 / 1 = 11.2902   [Test_GPUHE.cpp:79]
+  MulVecs: 0.283659 / 1 = 0.283659   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.007451 / 1 = 0.007451   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.00011 / 1 = 0.00011   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.274992 / 1 = 0.274992   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.001097 / 1 = 0.001097   [DoubleCRT.cu:391]
+
+
+  AddVecs: 0.018744 / 2 = 0.009372   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.010804 / 2 = 0.005402   [DoubleCRT.cu:416]
+  AddVecsPhase2: 9.3e-05 / 2 = 4.65e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.007114 / 2 = 0.003557   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.000725 / 2 = 0.0003625   [DoubleCRT.cu:387]
+  MulVecs: 0.08372 / 1 = 0.08372   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.005419 / 1 = 0.005419   [DoubleCRT.cu:420]
+  MulVecsPhase2: 4.7e-05 / 1 = 4.7e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.077788 / 1 = 0.077788   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.000462 / 1 = 0.000462   [DoubleCRT.cu:391]
+  SubVecs: 0.018625 / 2 = 0.0093125   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.010717 / 2 = 0.0053585   [DoubleCRT.cu:418]
+  SubVecsPhase2: 9.8e-05 / 2 = 4.9e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.007056 / 2 = 0.003528   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.000747 / 2 = 0.0003735   [DoubleCRT.cu:389]
+  SubtractionCircuit: 3.04324 / 1 = 3.04324   [Test_GPUHE.cpp:103]
+
+
+  AddVecs: 0.051766 / 4 = 0.0129415   [DoubleCRT.cu:373]
+  AddVecsPhase1: 0.022547 / 4 = 0.00563675   [DoubleCRT.cu:416]
+  AddVecsPhase2: 0.000275 / 4 = 6.875e-05   [DoubleCRT.cu:442]
+  AddVecsPhase3: 0.026283 / 4 = 0.00657075   [DoubleCRT.cu:469]
+  AddVecsSetup: 0.002647 / 4 = 0.00066175   [DoubleCRT.cu:387]
+  MulVecNum: 0.049069 / 2 = 0.0245345   [DoubleCRT.cu:546]
+  MulVecNumPhase1: 0.004533 / 2 = 0.0022665   [DoubleCRT.cu:578]
+  MulVecNumPhase2: 0.043228 / 2 = 0.021614   [DoubleCRT.cu:605]
+  MulVecNumPhase3: 0.043141 / 2 = 0.0215705   [DoubleCRT.cu:630]
+  MulVecs: 0.883267 / 6 = 0.147211   [DoubleCRT.cu:377]
+  MulVecsPhase1: 0.02988 / 6 = 0.00498   [DoubleCRT.cu:420]
+  MulVecsPhase2: 0.000374 / 6 = 6.23333e-05   [DoubleCRT.cu:446]
+  MulVecsPhase3: 0.850141 / 6 = 0.14169   [DoubleCRT.cu:473]
+  MulVecsSetup: 0.002855 / 6 = 0.000475833   [DoubleCRT.cu:391]
+  MultiplicationCircuit: 15.3389 / 1 = 15.3389   [Test_GPUHE.cpp:126]
+  SubVecs: 0.052063 / 4 = 0.0130157   [DoubleCRT.cu:375]
+  SubVecsPhase1: 0.022751 / 4 = 0.00568775   [DoubleCRT.cu:418]
+  SubVecsPhase2: 0.000306 / 4 = 7.65e-05   [DoubleCRT.cu:444]
+  SubVecsPhase3: 0.026149 / 4 = 0.00653725   [DoubleCRT.cu:471]
+  SubVecsSetup: 0.002836 / 4 = 0.000709   [DoubleCRT.cu:389]
+
